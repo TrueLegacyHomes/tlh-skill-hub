@@ -16,12 +16,12 @@ const recent = [...allSkills]
   .sort((a, b) => (b.data.last_updated || '').localeCompare(a.data.last_updated || ''))
   .slice(0, 5);
 
-// Quick-start goals (mirrors Finder)
+// Quick-start goals — each links to Finder with pre-selected goal
 const quickStart = [
-  { icon: '🎯', label: 'Define a problem', href: `${base}finder/`, desc: 'Scope and clarify before solving' },
-  { icon: '🏗️', label: 'Build something new', href: `${base}finder/`, desc: 'Plan a new product or feature' },
-  { icon: '⚡', label: 'Automate a workflow', href: `${base}finder/`, desc: 'Replace manual steps' },
-  { icon: '📋', label: 'Document a process', href: `${base}finder/`, desc: 'Create an SOP or template' },
+  { icon: '🎯', label: 'Define a problem', href: `${base}finder/?goal=define`, desc: 'Scope and clarify before solving' },
+  { icon: '🏗️', label: 'Build something new', href: `${base}finder/?goal=build`, desc: 'Plan a new product or feature' },
+  { icon: '⚡', label: 'Automate a workflow', href: `${base}finder/?goal=automate`, desc: 'Replace manual steps' },
+  { icon: '📋', label: 'Document a process', href: `${base}finder/?goal=document`, desc: 'Create an SOP or template' },
 ];
 ---
 

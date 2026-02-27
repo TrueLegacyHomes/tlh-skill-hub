@@ -167,5 +167,16 @@ const skillsData = allSkills
     document.querySelectorAll('.goal-btn').forEach(b => {
       b.classList.remove('border-[var(--color-teal)]', 'bg-[var(--color-teal-light)]');
     });
+    // Clear the URL parameter
+    const url = new URL(window.location);
+    url.searchParams.delete('goal');
+    window.history.replaceState({}, '', url);
   });
+
+  // Auto-trigger if ?goal= is in the URL (from home page quick-start buttons)
+  const urlParams = new URLSearchParams(window.location.search);
+  const preselectedGoal = urlParams.get('goal');
+  if (preselectedGoal && goalSkills[preselectedGoal]) {
+    showResults(preselectedGoal);
+  }
 </script>
