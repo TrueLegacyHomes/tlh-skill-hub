@@ -1,0 +1,70 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'TLH AI Skill Hub — Your guide to every skill in the True Legacy Homes taxonomy.' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <title>{title} | TLH Skill Hub</title>
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white border-b border-[var(--color-cream-dark)] sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo + Title -->
+          <a href={base} class="flex items-center gap-3 no-underline">
+            <svg viewBox="0 0 40 40" class="w-8 h-8" fill="none">
+              <path d="M20 4 L8 16 L8 28 L20 16 Z" fill="#38b5ad"/>
+              <path d="M20 4 L32 16 L32 28 L20 16 Z" fill="#38b5ad" opacity="0.7"/>
+            </svg>
+            <div>
+              <span class="text-lg font-bold text-[var(--color-charcoal)]">TLH Skill Hub</span>
+              <span class="hidden sm:inline text-sm text-[var(--color-gray-warm)] ml-2">True Legacy Homes</span>
+            </div>
+          </a>
+
+          <!-- Nav -->
+          <nav class="flex items-center gap-1 sm:gap-2">
+            <a href={base} class="px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-teal-light)] hover:text-[var(--color-teal-dark)] transition-colors no-underline">
+              Skills
+            </a>
+            <a href={`${base}finder/`} class="px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-teal-light)] hover:text-[var(--color-teal-dark)] transition-colors no-underline">
+              Finder
+            </a>
+            <a href={`${base}workflows/`} class="px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-teal-light)] hover:text-[var(--color-teal-dark)] transition-colors no-underline">
+              Workflows
+            </a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-[var(--color-cream-dark)] py-6 mt-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-[var(--color-gray-warm)]">
+        <p>For internal use only &middot; True Legacy Homes &middot; <span class="text-[var(--color-teal)]">Skill Taxonomy v1.0</span></p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+---
+interface Props {
+  status: string;
+}
+const { status } = Astro.props;
+
+const styles: Record<string, { bg: string; text: string }> = {
+  'active': { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  'draft': { bg: 'bg-amber-100', text: 'text-amber-800' },
+  'not-built': { bg: 'bg-gray-100', text: 'text-gray-500' },
+  'deprecated': { bg: 'bg-red-100', text: 'text-red-800' },
+};
+
+const s = styles[status] || styles['active'];
+---
+
+<span class:list={["text-xs font-medium px-2.5 py-1 rounded-full capitalize inline-block", s.bg, s.text]}>
+  {status === 'not-built' ? 'Not Built' : status}
+</span>

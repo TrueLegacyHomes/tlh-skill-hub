@@ -1,0 +1,71 @@
+---
+interface Props {
+  id: string;
+  skillId: string;
+  name: string;
+  series: string;
+  status: string;
+  audience: string;
+  oneLiner: string;
+}
+
+const { id, skillId, name, series, status, audience, oneLiner } = Astro.props;
+const base = import.meta.env.BASE_URL;
+
+const seriesColors: Record<string, { bg: string; text: string; label: string }> = {
+  'Foundation': { bg: 'bg-[var(--color-teal)]', text: 'text-white', label: '1.xx Foundation' },
+  'Blueprints': { bg: 'bg-[var(--color-navy)]', text: 'text-white', label: '2.xx Blueprints' },
+  'Engineering Standards': { bg: 'bg-purple-600', text: 'text-white', label: '3.xx Standards' },
+  'Engineering Toolkit': { bg: 'bg-amber-600', text: 'text-white', label: '4.xx Toolkit' },
+};
+
+const statusStyles: Record<string, { bg: string; text: string }> = {
+  'active': { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  'draft': { bg: 'bg-amber-100', text: 'text-amber-800' },
+  'not-built': { bg: 'bg-gray-100', text: 'text-gray-500' },
+  'deprecated': { bg: 'bg-red-100', text: 'text-red-800' },
+};
+
+const sc = seriesColors[series] || seriesColors['Foundation'];
+const ss = statusStyles[status] || statusStyles['active'];
+const isClickable = status !== 'not-built';
+const Tag = isClickable ? 'a' : 'div';
+const href = isClickable ? `${base}skills/${id}/` : undefined;
+---
+
+<div class:list={[
+  "rounded-xl border bg-white shadow-sm transition-all duration-200 flex flex-col",
+  isClickable ? "hover:shadow-md hover:border-[var(--color-teal)] cursor-pointer" : "opacity-60"
+]}>
+  {isClickable ? (
+    <a href={href} class="flex flex-col flex-1 p-5 no-underline text-inherit">
+      <div class="flex items-start justify-between gap-2 mb-3">
+        <span class:list={["text-xs font-bold px-2 py-0.5 rounded-full", sc.bg, sc.text]}>{sc.label}</span>
+        <span class:list={["text-xs font-medium px-2 py-0.5 rounded-full capitalize", ss.bg, ss.text]}>{status}</span>
+      </div>
+      <div class="mb-1">
+        <span class="text-sm font-mono text-[var(--color-teal-dark)]">{skillId}</span>
+      </div>
+      <h3 class="text-lg font-bold text-[var(--color-charcoal)] mb-2">{name}</h3>
+      <p class="text-sm text-[var(--color-gray-warm)] flex-1 leading-relaxed">{oneLiner}</p>
+      <div class="mt-3 pt-3 border-t border-[var(--color-cream)]">
+        <span class="text-xs text-[var(--color-gray-warm)]">Audience: {audience}</span>
+      </div>
+    </a>
+  ) : (
+    <div class="flex flex-col flex-1 p-5">
+      <div class="flex items-start justify-between gap-2 mb-3">
+        <span class:list={["text-xs font-bold px-2 py-0.5 rounded-full", sc.bg, sc.text]}>{sc.label}</span>
+        <span class:list={["text-xs font-medium px-2 py-0.5 rounded-full capitalize", ss.bg, ss.text]}>{status}</span>
+      </div>
+      <div class="mb-1">
+        <span class="text-sm font-mono text-[var(--color-teal-dark)]">{skillId}</span>
+      </div>
+      <h3 class="text-lg font-bold text-[var(--color-charcoal)] mb-2">{name}</h3>
+      <p class="text-sm text-[var(--color-gray-warm)] flex-1 leading-relaxed">{oneLiner}</p>
+      <div class="mt-3 pt-3 border-t border-[var(--color-cream)]">
+        <span class="text-xs text-[var(--color-gray-warm)]">Audience: {audience}</span>
+      </div>
+    </div>
+  )}
+</div>

@@ -1,0 +1,171 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const allSkills = await getCollection('skills');
+const base = import.meta.env.BASE_URL;
+
+// Build the skill data for the wizard
+const skillsData = allSkills
+  .filter(s => s.data.status !== 'not-built')
+  .sort((a, b) => (a.data.skillId || '').localeCompare(b.data.skillId || '', undefined, { numeric: true }))
+  .map(s => ({
+    id: s.id,
+    name: s.data.name,
+    skillId: s.data.skillId || s.id,
+    series: s.data.series || 'Foundation',
+    status: s.data.status || 'active',
+    audience: s.data.audience || 'All Team Members',
+    oneLiner: s.data.oneLiner || '',
+  }));
+---
+
+<Layout title="Skill Finder">
+  <section class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <h1 class="text-3xl font-black text-[var(--color-charcoal)] mb-3">Skill Finder</h1>
+    <p class="text-lg text-[var(--color-gray-warm)] mb-8">
+      Answer a few questions to find the right skill for your project.
+    </p>
+
+    <!-- Wizard -->
+    <div id="wizard" class="space-y-6">
+      <!-- Step 1: What are you trying to do? -->
+      <div class="wizard-step bg-white rounded-xl border border-[var(--color-cream-dark)] p-6" data-step="1">
+        <h2 class="text-lg font-bold text-[var(--color-charcoal)] mb-4">What are you trying to do?</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="define">
+            <span class="block font-bold text-[var(--color-charcoal)]">Define a problem</span>
+            <span class="text-[var(--color-gray-warm)]">Scope and clarify an issue before solving it</span>
+          </button>
+          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="build">
+            <span class="block font-bold text-[var(--color-charcoal)]">Build something new</span>
+            <span class="text-[var(--color-gray-warm)]">Create a new product, process, or system</span>
+          </button>
+          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="automate">
+            <span class="block font-bold text-[var(--color-charcoal)]">Automate a workflow</span>
+            <span class="text-[var(--color-gray-warm)]">Reduce manual steps with automation</span>
+          </button>
+          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="document">
+            <span class="block font-bold text-[var(--color-charcoal)]">Document a process</span>
+            <span class="text-[var(--color-gray-warm)]">Create an SOP, template, or guide</span>
+          </button>
+          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="report">
+            <span class="block font-bold text-[var(--color-charcoal)]">Create a report or dashboard</span>
+            <span class="text-[var(--color-gray-warm)]">Track metrics and visualize data</span>
+          </button>
+          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="change">
+            <span class="block font-bold text-[var(--color-charcoal)]">Request a system change</span>
+            <span class="text-[var(--color-gray-warm)]">Modify an existing system or platform</span>
+          </button>
+          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="improve">
+            <span class="block font-bold text-[var(--color-charcoal)]">Improve AI skills</span>
+            <span class="text-[var(--color-gray-warm)]">Build, check, or manage skills themselves</span>
+          </button>
+          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="reference">
+            <span class="block font-bold text-[var(--color-charcoal)]">Look up company info</span>
+            <span class="text-[var(--color-gray-warm)]">Brand, people, tools, or company details</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="results" class="hidden">
+        <div class="bg-[var(--color-teal-light)] rounded-xl border border-[var(--color-teal)] p-6">
+          <h2 class="text-lg font-bold text-[var(--color-teal-dark)] mb-1">Recommended Skills</h2>
+          <p class="text-sm text-[var(--color-gray-warm)] mb-4">Based on your goal, here are the skills you should use:</p>
+          <div id="results-list" class="space-y-3"></div>
+        </div>
+        <button id="reset-btn" class="mt-4 text-sm text-[var(--color-teal-dark)] underline">Start over</button>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ skillsData, base }}>
+  // Skill recommendation mappings
+  const goalSkills = {
+    define: ['2.01', '1.05', '1.06'],
+    build: ['2.01', '2.03', '2.04', '1.04'],
+    automate: ['2.06', '2.01', '1.09'],
+    document: ['2.02', '2.07', '1.04'],
+    report: ['2.05', '1.09'],
+    change: ['2.04', '2.01', '1.09'],
+    improve: ['1.01', '1.02', '1.03'],
+    reference: ['1.05', '1.06', '1.07', '1.08', '1.09'],
+  };
+
+  const goalDescriptions = {
+    define: 'Start by clearly defining the problem, then move to the right blueprint skill.',
+    build: 'Define the problem first, plan the product, then create a handoff brief for engineering.',
+    automate: 'Plan the automation with a clear problem definition and use the automation planner.',
+    document: 'Create SOPs or templates with standardized formats.',
+    report: 'Plan your report or dashboard with the right metrics and data sources.',
+    change: 'Submit a structured change request after defining the problem.',
+    improve: 'Use the skill builder to create new skills, quality checker to validate, and memory manager for context.',
+    reference: 'These foundational skills provide company context and information.',
+  };
+
+  document.querySelectorAll('.goal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const goal = btn.dataset.goal;
+      showResults(goal);
+    });
+  });
+
+  function showResults(goal) {
+    const recommended = goalSkills[goal] || [];
+    const desc = goalDescriptions[goal] || '';
+    const resultsList = document.getElementById('results-list');
+    const resultsDiv = document.getElementById('results');
+
+    // Highlight selected button
+    document.querySelectorAll('.goal-btn').forEach(b => {
+      b.classList.remove('border-[var(--color-teal)]', 'bg-[var(--color-teal-light)]');
+    });
+    const selectedBtn = document.querySelector(`[data-goal="${goal}"]`);
+    if (selectedBtn) {
+      selectedBtn.classList.add('border-[var(--color-teal)]', 'bg-[var(--color-teal-light)]');
+    }
+
+    // Build results
+    const matchedSkills = recommended
+      .map(id => skillsData.find(s => s.skillId === id))
+      .filter(Boolean);
+
+    resultsList.innerHTML = '';
+
+    if (desc) {
+      const tip = document.createElement('p');
+      tip.className = 'text-sm text-[var(--color-teal-dark)] font-medium mb-2 italic';
+      tip.textContent = desc;
+      resultsList.appendChild(tip);
+    }
+
+    matchedSkills.forEach((skill, idx) => {
+      const card = document.createElement('a');
+      card.href = `${base}skills/${skill.id}/`;
+      card.className = 'block bg-white rounded-lg border border-[var(--color-cream-dark)] p-4 hover:shadow-md hover:border-[var(--color-teal)] transition-all no-underline';
+      card.innerHTML = `
+        <div class="flex items-center gap-3">
+          <span class="text-lg font-bold text-[var(--color-teal)]">${idx + 1}</span>
+          <div>
+            <span class="text-xs font-mono text-[var(--color-teal-dark)]">${skill.skillId}</span>
+            <h3 class="text-sm font-bold text-[var(--color-charcoal)]">${skill.name}</h3>
+            <p class="text-xs text-[var(--color-gray-warm)]">${skill.oneLiner}</p>
+          </div>
+        </div>
+      `;
+      resultsList.appendChild(card);
+    });
+
+    resultsDiv.classList.remove('hidden');
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    document.getElementById('results').classList.add('hidden');
+    document.querySelectorAll('.goal-btn').forEach(b => {
+      b.classList.remove('border-[var(--color-teal)]', 'bg-[var(--color-teal-light)]');
+    });
+  });
+</script>
