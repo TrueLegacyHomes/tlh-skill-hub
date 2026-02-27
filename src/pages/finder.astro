@@ -83,24 +83,56 @@ const skillsData = allSkills
 
 <script define:vars={{ skillsData, base }}>
   // Skill recommendation mappings
+  // Skill ID → SKILL.md file path mapping
+  const skillPaths = {
+    '1.01': '~/.claude/skills/1.xx-foundation/1.01-skill-builder/SKILL.md',
+    '1.02': '~/.claude/skills/1.xx-foundation/1.02-quality-checker/SKILL.md',
+    '1.03': '~/.claude/skills/1.xx-foundation/1.03-memory-manager/SKILL.md',
+    '1.04': '~/.claude/skills/1.xx-foundation/1.04-engineering-handoff-brief-creator/SKILL.md',
+    '1.05': '~/.claude/skills/1.xx-foundation/1.05-company-profile/SKILL.md',
+    '1.06': '~/.claude/skills/1.xx-foundation/1.06-people-and-roles/SKILL.md',
+    '1.07': '~/.claude/skills/1.xx-foundation/1.07-brand-look-and-feel/SKILL.md',
+    '1.08': '~/.claude/skills/1.xx-foundation/1.08-brand-tone-and-language/SKILL.md',
+    '1.09': '~/.claude/skills/1.xx-foundation/1.09-tools-and-platforms-map/SKILL.md',
+    '2.01': '~/.claude/skills/2.xx-blueprints/2.01-problem-definer/SKILL.md',
+    '2.02': '~/.claude/skills/2.xx-blueprints/2.02-sop-creator/SKILL.md',
+    '2.03': '~/.claude/skills/2.xx-blueprints/2.03-new-product-planner/SKILL.md',
+    '2.04': '~/.claude/skills/2.xx-blueprints/2.04-system-change-request/SKILL.md',
+    '2.05': '~/.claude/skills/2.xx-blueprints/2.05-report-and-dashboard-planner/SKILL.md',
+    '2.06': '~/.claude/skills/2.xx-blueprints/2.06-automation-planner/SKILL.md',
+    '2.07': '~/.claude/skills/2.xx-blueprints/2.07-template-creator/SKILL.md',
+  };
+
   const goalSkills = {
     define: ['2.01', '1.05', '1.06'],
     build: ['2.01', '2.03', '2.04', '1.04'],
-    automate: ['2.06', '2.01', '1.09'],
+    automate: ['2.01', '2.06', '1.09'],
     document: ['2.02', '2.07', '1.04'],
     report: ['2.05', '1.09'],
-    change: ['2.04', '2.01', '1.09'],
+    change: ['2.01', '2.04', '1.09'],
     improve: ['1.01', '1.02', '1.03'],
     reference: ['1.05', '1.06', '1.07', '1.08', '1.09'],
+  };
+
+  // Goal labels for prompt context
+  const goalLabels = {
+    define: 'Define a problem',
+    build: 'Build something new',
+    automate: 'Automate a workflow',
+    document: 'Document a process',
+    report: 'Create a report or dashboard',
+    change: 'Request a system change',
+    improve: 'Improve AI skills',
+    reference: 'Look up company info',
   };
 
   const goalDescriptions = {
     define: 'Start by clearly defining the problem, then move to the right blueprint skill.',
     build: 'Define the problem first, plan the product, then create a handoff brief for engineering.',
-    automate: 'Plan the automation with a clear problem definition and use the automation planner.',
+    automate: 'Define the problem first, then plan the automation and reference your tools.',
     document: 'Create SOPs or templates with standardized formats.',
     report: 'Plan your report or dashboard with the right metrics and data sources.',
-    change: 'Submit a structured change request after defining the problem.',
+    change: 'Define the problem first, then submit a structured change request.',
     improve: 'Use the skill builder to create new skills, quality checker to validate, and memory manager for context.',
     reference: 'These foundational skills provide company context and information.',
   };
@@ -156,6 +188,52 @@ const skillsData = allSkills
         </div>
       `;
       resultsList.appendChild(card);
+    });
+
+    // Build copy-paste prompt
+    const goalLabel = goalLabels[goal] || goal;
+    const skillSteps = matchedSkills.map((skill, idx) => {
+      const path = skillPaths[skill.skillId] || '';
+      return `Step ${idx + 1}: Read and follow ${skill.skillId} ${skill.name} (${path})`;
+    }).join('\n');
+
+    const promptText = `I need to: ${goalLabel}
+
+Work through the following skills in order. For each step, read the SKILL.md file, follow its instructions completely, and confirm completion before moving to the next step.
+
+${skillSteps}
+
+Begin with Step 1.`;
+
+    const promptBlock = document.createElement('div');
+    promptBlock.className = 'mt-6 bg-white rounded-lg border border-[var(--color-cream-dark)] p-5';
+    promptBlock.innerHTML = `
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-[var(--color-charcoal)]">Ready to start? Copy this prompt into Claude Code:</h3>
+      </div>
+      <div class="relative">
+        <pre class="bg-[var(--color-charcoal)] text-[var(--color-cream)] text-sm rounded-lg p-4 overflow-x-auto whitespace-pre-wrap leading-relaxed">${promptText}</pre>
+        <button id="copy-prompt-btn" class="absolute top-3 right-3 px-3 py-1.5 bg-[var(--color-teal)] text-white text-xs font-bold rounded-md hover:bg-[var(--color-teal-dark)] transition-colors">
+          Copy
+        </button>
+      </div>
+      <p class="text-xs text-[var(--color-gray-warm)] mt-3">Paste this directly into a new Claude Code conversation to get started.</p>
+    `;
+    resultsList.appendChild(promptBlock);
+
+    // Copy button handler
+    document.getElementById('copy-prompt-btn').addEventListener('click', () => {
+      navigator.clipboard.writeText(promptText).then(() => {
+        const btn = document.getElementById('copy-prompt-btn');
+        btn.textContent = 'Copied!';
+        btn.classList.remove('bg-[var(--color-teal)]');
+        btn.classList.add('bg-green-600');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('bg-green-600');
+          btn.classList.add('bg-[var(--color-teal)]');
+        }, 2000);
+      });
     });
 
     resultsDiv.classList.remove('hidden');
