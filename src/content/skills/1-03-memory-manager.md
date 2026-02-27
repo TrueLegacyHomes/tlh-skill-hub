@@ -7,6 +7,8 @@ audience: "All Team Members"
 oneLiner: "Preserves context, decisions, and institutional knowledge across conversations so nothing gets lost between sessions."
 version: "1.0"
 last_updated: "2025-02-27"
+recommendedFor: ["improve"]
+claudePath: "~/.claude/skills/1.xx-foundation/1.03-memory-manager/SKILL.md"
 ---
 
 # 1.03 Memory Manager

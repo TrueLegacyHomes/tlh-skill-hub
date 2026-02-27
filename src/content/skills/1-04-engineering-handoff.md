@@ -7,6 +7,8 @@ audience: "All Team Members"
 oneLiner: "Packages any Blueprint spec (2.xx) into a structured engineering brief that the development team can act on immediately."
 version: "1.0"
 last_updated: "2025-02-27"
+recommendedFor: ["build", "document"]
+claudePath: "~/.claude/skills/1.xx-foundation/1.04-engineering-handoff-brief-creator/SKILL.md"
 ---
 
 # 1.04 Engineering Handoff Brief Creator

@@ -7,6 +7,8 @@ audience: "All Team Members"
 oneLiner: "The single source of truth for what True Legacy Homes is, what it does, who it serves, and how it makes money."
 version: "1.0"
 last_updated: "2025-02-27"
+recommendedFor: ["define", "reference"]
+claudePath: "~/.claude/skills/1.xx-foundation/1.05-company-profile/SKILL.md"
 ---
 
 # 1.05 Company Profile

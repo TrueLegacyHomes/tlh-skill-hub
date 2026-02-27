@@ -7,6 +7,8 @@ audience: "All Team Members"
 oneLiner: "Helps non-technical users document a business process as a structured Standard Operating Procedure that can be handed to engineering for automation or tooling."
 version: "1.0"
 last_updated: "2025-02-27"
+recommendedFor: ["document"]
+claudePath: "~/.claude/skills/2.xx-blueprints/2.02-sop-creator/SKILL.md"
 ---
 
 # 2.02 SOP Creator

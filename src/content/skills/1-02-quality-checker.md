@@ -7,6 +7,8 @@ audience: "All Team Members"
 oneLiner: "Validates any skill, process, list, document, taxonomy, or deliverable for completeness, consistency, accuracy, and MECE compliance."
 version: "1.0"
 last_updated: "2025-02-27"
+recommendedFor: ["improve"]
+claudePath: "~/.claude/skills/1.xx-foundation/1.02-quality-checker/SKILL.md"
 ---
 
 # 1.02 Quality Checker

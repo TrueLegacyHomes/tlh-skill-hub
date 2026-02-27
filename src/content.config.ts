@@ -14,6 +14,9 @@ const skills = defineCollection({
     series: z.string().optional(),
     audience: z.string().optional(),
     oneLiner: z.string().optional(),
+    // Goal recommendations and Claude integration
+    recommendedFor: z.array(z.string()).optional().default([]),
+    claudePath: z.string().optional(),
   }),
 });
 

@@ -7,6 +7,8 @@ audience: "All Team Members"
 oneLiner: "Helps non-technical users spec a reusable template, form, or document structure for team-wide consistency."
 version: "1.0"
 last_updated: "2026-02-26"
+recommendedFor: ["document"]
+claudePath: "~/.claude/skills/2.xx-blueprints/2.07-template-creator/SKILL.md"
 ---
 
 # 2.07 Template Creator

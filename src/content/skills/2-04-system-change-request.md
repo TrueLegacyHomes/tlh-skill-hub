@@ -7,6 +7,8 @@ audience: "All Team Members"
 oneLiner: "Helps non-technical users spec a change to an existing system, tool, or platform."
 version: "1.0"
 last_updated: "2025-02-27"
+recommendedFor: ["build", "change"]
+claudePath: "~/.claude/skills/2.xx-blueprints/2.04-system-change-request/SKILL.md"
 ---
 
 # 2.04 System Change Request
