@@ -1,168 +1,176 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import SkillCard from '../components/SkillCard.astro';
 import { getCollection } from 'astro:content';
 
 const allSkills = await getCollection('skills');
-
-// Sort: by skillId numerically
-const skills = allSkills.sort((a, b) => {
-  const aId = a.data.skillId || a.id;
-  const bId = b.data.skillId || b.id;
-  return aId.localeCompare(bId, undefined, { numeric: true });
-});
+const base = import.meta.env.BASE_URL;
 
 // Stats
-const total = skills.length;
-const active = skills.filter(s => s.data.status === 'active').length;
-const draft = skills.filter(s => s.data.status === 'draft').length;
-const notBuilt = skills.filter(s => s.data.status === 'not-built').length;
+const total = allSkills.length;
+const active = allSkills.filter(s => s.data.status === 'active').length;
+const draft = allSkills.filter(s => s.data.status === 'draft').length;
 
-// Series list for filter
-const seriesList = ['All', 'Foundation', 'Blueprints', 'Engineering Standards', 'Engineering Toolkit'];
-const statusList = ['All', 'active', 'draft', 'not-built'];
+// Recently updated (sort by last_updated descending, take top 5)
+const recent = [...allSkills]
+  .filter(s => s.data.status !== 'not-built')
+  .sort((a, b) => (b.data.last_updated || '').localeCompare(a.data.last_updated || ''))
+  .slice(0, 5);
+
+// Quick-start goals (mirrors Finder)
+const quickStart = [
+  { icon: '🎯', label: 'Define a problem', href: `${base}finder/`, desc: 'Scope and clarify before solving' },
+  { icon: '🏗️', label: 'Build something new', href: `${base}finder/`, desc: 'Plan a new product or feature' },
+  { icon: '⚡', label: 'Automate a workflow', href: `${base}finder/`, desc: 'Replace manual steps' },
+  { icon: '📋', label: 'Document a process', href: `${base}finder/`, desc: 'Create an SOP or template' },
+];
 ---
 
-<Layout title="Skill Catalog">
+<Layout title="Home">
   <!-- Hero -->
   <section class="bg-white border-b border-[var(--color-cream-dark)]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 class="text-3xl sm:text-4xl font-black text-[var(--color-charcoal)] mb-3">
-        AI Skill Catalog
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 text-center">
+      <h1 class="text-4xl sm:text-5xl font-black text-[var(--color-charcoal)] mb-4 leading-tight">
+        TLH AI Skill Hub
       </h1>
-      <p class="text-lg text-[var(--color-gray-warm)] max-w-2xl">
-        Browse every skill in the True Legacy Homes taxonomy. Click any skill to see full documentation, usage guides, and examples.
+      <p class="text-xl text-[var(--color-gray-warm)] max-w-2xl mx-auto mb-8">
+        Your guide to every AI skill at True Legacy Homes. Find the right skill, follow proven workflows, and get things done faster.
       </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href={`${base}finder/`} class="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-teal)] text-white font-bold rounded-lg hover:bg-[var(--color-teal-dark)] transition-colors no-underline text-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          Find the Right Skill
+        </a>
+        <a href={`${base}catalog/`} class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-[var(--color-cream-dark)] text-[var(--color-charcoal)] font-bold rounded-lg hover:border-[var(--color-teal)] hover:text-[var(--color-teal-dark)] transition-colors no-underline text-sm">
+          Browse All {total} Skills
+        </a>
+      </div>
     </div>
   </section>
 
-  <!-- Stats Bar -->
+  <!-- Stats -->
   <section class="bg-[var(--color-cream)] border-b border-[var(--color-cream-dark)]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex flex-wrap gap-6 text-sm">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-[var(--color-teal)]"></span>
-          <span class="text-[var(--color-charcoal)] font-medium">{total} Total Skills</span>
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <span class="text-3xl font-black text-[var(--color-teal)]">{active}</span>
+          <p class="text-sm text-[var(--color-gray-warm)] mt-1">Active Skills</p>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-          <span class="text-[var(--color-gray-warm)]">{active} Active</span>
+        <div>
+          <span class="text-3xl font-black text-[var(--color-charcoal)]">{total}</span>
+          <p class="text-sm text-[var(--color-gray-warm)] mt-1">Total in Taxonomy</p>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-          <span class="text-[var(--color-gray-warm)]">{draft} Draft</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
-          <span class="text-[var(--color-gray-warm)]">{notBuilt} Planned</span>
+        <div>
+          <span class="text-3xl font-black text-amber-600">4</span>
+          <p class="text-sm text-[var(--color-gray-warm)] mt-1">Skill Series</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Filters + Grid -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Filter Controls -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-6" id="filters">
-      <!-- Search -->
-      <div class="flex-1">
-        <input
-          type="text"
-          id="search-input"
-          placeholder="Search skills..."
-          class="w-full px-4 py-2.5 rounded-lg border border-[var(--color-cream-dark)] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-teal)] focus:border-transparent"
-        />
-      </div>
-      <!-- Series Filter -->
-      <select id="series-filter" class="px-4 py-2.5 rounded-lg border border-[var(--color-cream-dark)] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-teal)]">
-        {seriesList.map(s => (
-          <option value={s}>{s === 'All' ? 'All Series' : s}</option>
-        ))}
-      </select>
-      <!-- Status Filter -->
-      <select id="status-filter" class="px-4 py-2.5 rounded-lg border border-[var(--color-cream-dark)] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-teal)]">
-        {statusList.map(s => (
-          <option value={s}>{s === 'All' ? 'All Statuses' : s === 'not-built' ? 'Planned' : s.charAt(0).toUpperCase() + s.slice(1)}</option>
-        ))}
-      </select>
-    </div>
-
-    <!-- Skills Grid -->
-    <div id="skills-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {skills.map(skill => (
-        <div
-          class="skill-card-wrapper"
-          data-name={skill.data.name?.toLowerCase()}
-          data-skill-id={skill.data.skillId?.toLowerCase()}
-          data-series={skill.data.series}
-          data-status={skill.data.status}
-          data-one-liner={skill.data.oneLiner?.toLowerCase()}
-        >
-          <SkillCard
-            id={skill.id}
-            skillId={skill.data.skillId || skill.id}
-            name={skill.data.name}
-            series={skill.data.series || 'Foundation'}
-            status={skill.data.status || 'active'}
-            audience={skill.data.audience || 'All Team Members'}
-            oneLiner={skill.data.oneLiner || skill.data.description || ''}
-          />
-        </div>
+  <!-- What Are You Trying to Do? -->
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <h2 class="text-2xl font-black text-[var(--color-charcoal)] mb-2">What are you trying to do?</h2>
+    <p class="text-[var(--color-gray-warm)] mb-6">Pick your goal and we'll point you to the right skills.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {quickStart.map(q => (
+        <a href={q.href} class="bg-white rounded-xl border border-[var(--color-cream-dark)] p-5 hover:shadow-md hover:border-[var(--color-teal)] transition-all no-underline group">
+          <span class="text-2xl block mb-2">{q.icon}</span>
+          <h3 class="text-sm font-bold text-[var(--color-charcoal)] group-hover:text-[var(--color-teal-dark)]">{q.label}</h3>
+          <p class="text-xs text-[var(--color-gray-warm)] mt-1">{q.desc}</p>
+        </a>
       ))}
     </div>
+  </section>
 
-    <!-- No results message -->
-    <div id="no-results" class="hidden text-center py-12">
-      <p class="text-[var(--color-gray-warm)] text-lg">No skills match your filters.</p>
-      <button id="clear-filters" class="mt-3 text-[var(--color-teal-dark)] underline text-sm">Clear all filters</button>
+  <!-- Top Workflows -->
+  <section class="bg-white border-y border-[var(--color-cream-dark)]">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-black text-[var(--color-charcoal)] mb-1">Common Workflows</h2>
+          <p class="text-[var(--color-gray-warm)] text-sm">The most common multi-skill chains used at TLH.</p>
+        </div>
+        <a href={`${base}workflows/`} class="text-sm text-[var(--color-teal-dark)] font-medium hover:underline no-underline">View all →</a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="rounded-xl border border-[var(--color-cream-dark)] p-5">
+          <h3 class="font-bold text-[var(--color-charcoal)] mb-2">New Project from Scratch</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
+              <span class="text-[var(--color-gray-warm)]">Problem Definer</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
+              <span class="text-[var(--color-gray-warm)]">New Product Planner</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
+              <span class="text-[var(--color-gray-warm)]">Engineering Handoff Brief</span>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-xl border border-[var(--color-cream-dark)] p-5">
+          <h3 class="font-bold text-[var(--color-charcoal)] mb-2">Create a New SOP</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
+              <span class="text-[var(--color-gray-warm)]">Problem Definer</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
+              <span class="text-[var(--color-gray-warm)]">SOP Creator</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
+              <span class="text-[var(--color-gray-warm)]">Quality Checker</span>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-xl border border-[var(--color-cream-dark)] p-5">
+          <h3 class="font-bold text-[var(--color-charcoal)] mb-2">Build an Automation</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
+              <span class="text-[var(--color-gray-warm)]">Problem Definer</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
+              <span class="text-[var(--color-gray-warm)]">Automation Planner</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
+              <span class="text-[var(--color-gray-warm)]">Engineering Handoff Brief</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recently Updated -->
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-black text-[var(--color-charcoal)] mb-1">Recently Updated</h2>
+        <p class="text-[var(--color-gray-warm)] text-sm">The latest skill additions and updates.</p>
+      </div>
+      <a href={`${base}catalog/`} class="text-sm text-[var(--color-teal-dark)] font-medium hover:underline no-underline">View all →</a>
+    </div>
+    <div class="space-y-3">
+      {recent.map(skill => (
+        <a href={`${base}skills/${skill.id}/`} class="flex items-center gap-4 bg-white rounded-lg border border-[var(--color-cream-dark)] px-5 py-4 hover:shadow-md hover:border-[var(--color-teal)] transition-all no-underline group">
+          <span class="text-sm font-mono text-[var(--color-teal-dark)] w-10 flex-shrink-0">{skill.data.skillId}</span>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-sm font-bold text-[var(--color-charcoal)] group-hover:text-[var(--color-teal-dark)]">{skill.data.name}</h3>
+            <p class="text-xs text-[var(--color-gray-warm)] truncate">{skill.data.oneLiner}</p>
+          </div>
+          <span class:list={[
+            "text-xs font-medium px-2 py-0.5 rounded-full capitalize flex-shrink-0",
+            skill.data.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+          ]}>{skill.data.status}</span>
+        </a>
+      ))}
     </div>
   </section>
 </Layout>
-
-<script>
-  const searchInput = document.getElementById('search-input') as HTMLInputElement;
-  const seriesFilter = document.getElementById('series-filter') as HTMLSelectElement;
-  const statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
-  const grid = document.getElementById('skills-grid')!;
-  const noResults = document.getElementById('no-results')!;
-  const clearBtn = document.getElementById('clear-filters')!;
-
-  function filterCards() {
-    const query = searchInput.value.toLowerCase().trim();
-    const series = seriesFilter.value;
-    const status = statusFilter.value;
-    const cards = grid.querySelectorAll('.skill-card-wrapper') as NodeListOf<HTMLElement>;
-    let visible = 0;
-
-    cards.forEach(card => {
-      const name = card.dataset.name || '';
-      const skillId = card.dataset.skillId || '';
-      const oneLiner = card.dataset.oneLiner || '';
-      const cardSeries = card.dataset.series || '';
-      const cardStatus = card.dataset.status || '';
-
-      const matchesSearch = !query || name.includes(query) || skillId.includes(query) || oneLiner.includes(query);
-      const matchesSeries = series === 'All' || cardSeries === series;
-      const matchesStatus = status === 'All' || cardStatus === status;
-
-      if (matchesSearch && matchesSeries && matchesStatus) {
-        card.style.display = '';
-        visible++;
-      } else {
-        card.style.display = 'none';
-      }
-    });
-
-    noResults.classList.toggle('hidden', visible > 0);
-  }
-
-  searchInput.addEventListener('input', filterCards);
-  seriesFilter.addEventListener('change', filterCards);
-  statusFilter.addEventListener('change', filterCards);
-  clearBtn.addEventListener('click', () => {
-    searchInput.value = '';
-    seriesFilter.value = 'All';
-    statusFilter.value = 'All';
-    filterCards();
-  });
-</script>

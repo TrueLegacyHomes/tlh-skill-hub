@@ -29,7 +29,7 @@ const sc = seriesColors[skill.data.series || 'Foundation'] || seriesColors['Foun
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <nav class="mb-6 text-sm">
-      <a href={base} class="text-[var(--color-teal-dark)] hover:underline">Skills</a>
+      <a href={`${base}catalog/`} class="text-[var(--color-teal-dark)] hover:underline">Catalog</a>
       <span class="text-[var(--color-gray-warm)] mx-2">/</span>
       <span class="text-[var(--color-gray-warm)]">{skill.data.name}</span>
     </nav>
@@ -78,7 +78,7 @@ const sc = seriesColors[skill.data.series || 'Foundation'] || seriesColors['Foun
 
     <!-- Back link -->
     <div class="mt-8 text-center">
-      <a href={base} class="inline-flex items-center gap-2 text-[var(--color-teal-dark)] hover:underline text-sm font-medium">
+      <a href={`${base}catalog/`} class="inline-flex items-center gap-2 text-[var(--color-teal-dark)] hover:underline text-sm font-medium">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         Back to all skills
       </a>
