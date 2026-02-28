@@ -8,7 +8,7 @@ oneLiner: "TLH's visual identity standards -- colors, typography, logo usage, im
 version: "1.0"
 last_updated: "2025-02-27"
 recommendedFor: ["reference"]
-claudePath: "~/.claude/skills/1.xx-foundation/1.07-brand-look-and-feel/SKILL.md"
+githubPath: "1.xx-foundation/1.07-brand-look-and-feel/SKILL.md"
 ---
 
 # 1.07 Brand Look & Feel -- NOT YET BUILT

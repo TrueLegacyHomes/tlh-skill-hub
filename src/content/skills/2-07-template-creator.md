@@ -8,7 +8,7 @@ oneLiner: "Helps non-technical users spec a reusable template, form, or document
 version: "1.0"
 last_updated: "2026-02-26"
 recommendedFor: ["document"]
-claudePath: "~/.claude/skills/2.xx-blueprints/2.07-template-creator/SKILL.md"
+githubPath: "2.xx-blueprints/2.07-template-creator/SKILL.md"
 ---
 
 # 2.07 Template Creator

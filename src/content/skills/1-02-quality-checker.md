@@ -8,7 +8,7 @@ oneLiner: "Validates any skill, process, list, document, taxonomy, or deliverabl
 version: "1.0"
 last_updated: "2025-02-27"
 recommendedFor: ["improve"]
-claudePath: "~/.claude/skills/1.xx-foundation/1.02-quality-checker/SKILL.md"
+githubPath: "1.xx-foundation/1.02-quality-checker/SKILL.md"
 ---
 
 # 1.02 Quality Checker

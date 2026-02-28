@@ -8,7 +8,7 @@ oneLiner: "TLH's organizational structure, team members, roles, responsibilities
 version: "1.0"
 last_updated: "2025-02-27"
 recommendedFor: ["define", "reference"]
-claudePath: "~/.claude/skills/1.xx-foundation/1.06-people-and-roles/SKILL.md"
+githubPath: "1.xx-foundation/1.06-people-and-roles/SKILL.md"
 ---
 
 # 1.06 People & Roles -- NOT YET BUILT

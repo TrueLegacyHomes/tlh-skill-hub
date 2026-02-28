@@ -8,7 +8,7 @@ oneLiner: "Helps non-technical users plan a new product, service, or major featu
 version: "1.0"
 last_updated: "2025-02-27"
 recommendedFor: ["build"]
-claudePath: "~/.claude/skills/2.xx-blueprints/2.03-new-product-planner/SKILL.md"
+githubPath: "2.xx-blueprints/2.03-new-product-planner/SKILL.md"
 ---
 
 # 2.03 New Product Planner

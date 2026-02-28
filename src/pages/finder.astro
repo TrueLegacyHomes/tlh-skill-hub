@@ -5,7 +5,7 @@ import { getCollection } from 'astro:content';
 const allSkills = await getCollection('skills');
 const base = import.meta.env.BASE_URL;
 
-// Build the skill data for the wizard (include recommendedFor and claudePath)
+// Build the skill data for the wizard (include recommendedFor and githubPath)
 const skillsData = allSkills
   .filter(s => s.data.status !== 'not-built')
   .sort((a, b) => (a.data.skillId || '').localeCompare(b.data.skillId || '', undefined, { numeric: true }))
@@ -18,7 +18,7 @@ const skillsData = allSkills
     audience: s.data.audience || 'All Team Members',
     oneLiner: s.data.oneLiner || '',
     recommendedFor: s.data.recommendedFor || [],
-    claudePath: s.data.claudePath || '',
+    githubPath: s.data.githubPath || '',
   }));
 
 // Build goal → skill mappings from frontmatter data (Blueprints first, then Foundation, by skillId)
@@ -180,16 +180,16 @@ for (const goal of goalKeys) {
       resultsList.appendChild(card);
     });
 
-    // Build copy-paste prompt
+    // Build copy-paste prompt (fetches skills from GitHub repo)
     const goalLabel = goalLabels[goal] || goal;
     const skillSteps = matchedSkills.map((skill, idx) => {
-      const path = skill.claudePath || '';
-      return `Step ${idx + 1}: Read and follow ${skill.skillId} ${skill.name} (${path})`;
-    }).join('\n');
+      const path = skill.githubPath || '';
+      return `Step ${idx + 1}: Fetch ${skill.skillId} ${skill.name} from GitHub:\n  gh api repos/TrueLegacyHomes/Skills2.0/contents/${path} --jq '.content' | base64 -d > /tmp/${skill.skillId.replace('.', '-')}-skill.md\n  Then read /tmp/${skill.skillId.replace('.', '-')}-skill.md and follow its instructions completely.`;
+    }).join('\n\n');
 
     const promptText = `I need to: ${goalLabel}
 
-Work through the following skills in order. For each step, read the SKILL.md file, follow its instructions completely, and confirm completion before moving to the next step.
+Work through the following TLH skills in order. Each skill lives in the TrueLegacyHomes/Skills2.0 GitHub repo. Fetch each one, read it, and follow its instructions before moving to the next step.
 
 ${skillSteps}
 

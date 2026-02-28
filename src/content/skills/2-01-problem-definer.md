@@ -8,7 +8,7 @@ oneLiner: "Helps non-technical users clearly define a business problem and produ
 version: "1.0"
 last_updated: "2025-02-27"
 recommendedFor: ["define", "build", "automate", "change"]
-claudePath: "~/.claude/skills/2.xx-blueprints/2.01-problem-definer/SKILL.md"
+githubPath: "2.xx-blueprints/2.01-problem-definer/SKILL.md"
 ---
 
 # 2.01 Problem Definer

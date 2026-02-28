@@ -8,7 +8,7 @@ oneLiner: "TLH's verbal identity -- voice attributes, writing standards, termino
 version: "1.0"
 last_updated: "2025-02-27"
 recommendedFor: ["reference"]
-claudePath: "~/.claude/skills/1.xx-foundation/1.08-brand-tone-and-language/SKILL.md"
+githubPath: "1.xx-foundation/1.08-brand-tone-and-language/SKILL.md"
 ---
 
 # 1.08 Brand Tone & Language -- NOT YET BUILT

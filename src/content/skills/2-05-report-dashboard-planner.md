@@ -8,7 +8,7 @@ oneLiner: "Helps non-technical users spec a report, dashboard, or data view they
 version: "1.0"
 last_updated: "2025-02-27"
 recommendedFor: ["report"]
-claudePath: "~/.claude/skills/2.xx-blueprints/2.05-report-and-dashboard-planner/SKILL.md"
+githubPath: "2.xx-blueprints/2.05-report-and-dashboard-planner/SKILL.md"
 ---
 
 # 2.05 Report & Dashboard Planner

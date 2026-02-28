@@ -8,7 +8,7 @@ oneLiner: "Helps non-technical users spec an automation, integration, or schedul
 version: "1.0"
 last_updated: "2026-02-26"
 recommendedFor: ["automate"]
-claudePath: "~/.claude/skills/2.xx-blueprints/2.06-automation-planner/SKILL.md"
+githubPath: "2.xx-blueprints/2.06-automation-planner/SKILL.md"
 ---
 
 # 2.06 Automation Planner
