@@ -46,27 +46,16 @@ if (user) {
     const base = import.meta.env.BASE_URL;
 
     document.getElementById('signin-microsoft')?.addEventListener('click', async () => {
-      console.log('[AUTH] Button clicked, starting OAuth...');
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
           redirectTo: `${window.location.origin}${base}auth/callback/`,
           scopes: 'email profile',
-          skipBrowserRedirect: true,
         },
       });
-      console.log('[AUTH] OAuth result:', { url: data?.url, error });
       if (error) {
-        console.error('[AUTH] Sign in error:', error.message);
-        alert('Sign in failed: ' + error.message);
-        return;
-      }
-      if (data?.url) {
-        console.log('[AUTH] Redirecting to:', data.url);
-        window.location.href = data.url;
-      } else {
-        console.error('[AUTH] No URL returned from signInWithOAuth');
-        alert('Sign in failed: no redirect URL returned.');
+        console.error('Sign in error:', error.message);
+        alert('Sign in failed. Please try again.');
       }
     });
   </script>
