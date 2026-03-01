@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from './lib/supabase';
 const PROTECTED_ROUTES = ['/board', '/dashboard', '/admin'];
 
 // Routes that require SSR auth checks (all others are static and skip auth)
-const SSR_ROUTES = ['/board', '/dashboard', '/admin', '/login', '/auth'];
+const SSR_ROUTES = ['/board', '/dashboard', '/admin', '/login', '/auth', '/api'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -29,11 +29,37 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Load profile if user is authenticated
   if (user) {
-    const { data: profile } = await supabase
+    let { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
+
+    // First sign-in fallback — if the DB trigger didn't fire or hasn't completed yet,
+    // create the profile from the Azure AD / OAuth user metadata.
+    if (!profile) {
+      const fullName =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.user_metadata?.preferred_username ||
+        user.email?.split('@')[0] ||
+        'Team Member';
+
+      const { data: newProfile } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: user.email!,
+          full_name: fullName,
+          role: 'team_member',
+          department: 'operations',
+        })
+        .select()
+        .single();
+
+      profile = newProfile;
+    }
+
     context.locals.profile = profile;
   }
 

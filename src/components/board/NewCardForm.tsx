@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import { supabase } from '../../lib/supabase';
+import { routeCard } from '../../lib/approval-engine';
 import type { Card, Column, Profile, CardType, Department, ImpactLevel, UrgencyLevel } from '../../lib/types';
 
 interface NewCardFormProps {
@@ -115,7 +116,20 @@ export default function NewCardForm({
         details: { title: data.title, card_type: data.card_type },
       });
 
-      onCreated(data);
+      // Auto-route the card through the approval engine
+      const routingResult = await routeCard(client, data, columns, currentUser);
+
+      if (routingResult.routed) {
+        // Re-fetch the card with updated status/column from routing
+        const { data: updatedCard } = await client
+          .from('cards')
+          .select('*')
+          .eq('id', data.id)
+          .single();
+        onCreated(updatedCard || data);
+      } else {
+        onCreated(data);
+      }
     }
 
     setLoading(false);

@@ -60,9 +60,12 @@ const profile = Astro.locals?.profile ?? null;
                 Dashboard
               </a>
             </span>
-            <div class="ml-2">
+            <div class="ml-2 flex items-center gap-1">
               {user && profile ? (
-                <div id="user-menu-mount" data-profile={JSON.stringify(profile)}></div>
+                <>
+                  <div id="notification-bell-mount" data-user-id={profile.id}></div>
+                  <div id="user-menu-mount" data-profile={JSON.stringify(profile)}></div>
+                </>
               ) : (
                 <a id="signin-link" href={`${base}login/`} class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-navy)] rounded-lg hover:bg-[#0d3a63] transition-colors no-underline">
                   Sign In
@@ -89,6 +92,19 @@ const profile = Astro.locals?.profile ?? null;
             import('preact').then(({ render, h }) => {
               const profile = JSON.parse(profileData);
               render(h(UserMenu, { profile }), mount);
+            });
+          });
+        }
+      }
+
+      // Hydrate NotificationBell
+      const bellMount = document.getElementById('notification-bell-mount');
+      if (bellMount) {
+        const userId = bellMount.dataset.userId;
+        if (userId) {
+          import('../components/auth/NotificationBell.tsx').then(({ default: NotificationBell }) => {
+            import('preact').then(({ render, h }) => {
+              render(h(NotificationBell, { userId }), bellMount);
             });
           });
         }

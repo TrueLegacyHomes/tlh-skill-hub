@@ -1,4 +1,5 @@
 import type { AstroCookies } from 'astro';
+import { createClient } from '@supabase/supabase-js';
 import { createBrowserClient, createServerClient, parseCookieHeader } from '@supabase/ssr';
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
@@ -21,5 +22,22 @@ export function createSupabaseServerClient(request: Request, cookies: AstroCooki
         });
       },
     },
+  });
+}
+
+/**
+ * Service role client — bypasses RLS. Use ONLY on server-side API routes
+ * for operations that require elevated permissions (e.g., token-based auth
+ * from Claude Code where there's no user session).
+ *
+ * Requires SUPABASE_SERVICE_ROLE_KEY env variable (not PUBLIC_ prefixed).
+ */
+export function createSupabaseServiceClient() {
+  const serviceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set. Add it to your .env and Vercel env vars.');
+  }
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
   });
 }
