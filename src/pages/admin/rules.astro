@@ -81,6 +81,66 @@ const formatLabel = (s: string | null) => {
       <a href="/admin/rules/" class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-teal)] rounded-lg no-underline">Approval Rules</a>
     </div>
 
+    <!-- Add New Rule -->
+    <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-6 mb-6">
+      <h2 class="text-lg font-bold text-[var(--color-charcoal)] mb-4">Add New Rule</h2>
+      <form id="new-rule-form" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-bold text-[var(--color-gray-warm)] uppercase">Rule Name *</label>
+            <input type="text" id="rule-name" required class="mt-1 w-full text-sm border border-[var(--color-cream-dark)] rounded-lg px-3 py-2 focus:outline-none focus:border-[var(--color-teal)]" placeholder="e.g., SOPs → Engineering Queue" />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-[var(--color-gray-warm)] uppercase">Priority</label>
+            <input type="number" id="rule-priority" min="1" value="50" class="mt-1 w-full text-sm border border-[var(--color-cream-dark)] rounded-lg px-3 py-2 focus:outline-none focus:border-[var(--color-teal)]" />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-[var(--color-gray-warm)] uppercase">Description</label>
+          <input type="text" id="rule-description" class="mt-1 w-full text-sm border border-[var(--color-cream-dark)] rounded-lg px-3 py-2 focus:outline-none focus:border-[var(--color-teal)]" placeholder="Why does this rule exist?" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="text-xs font-bold text-[var(--color-gray-warm)] uppercase">Match Card Type</label>
+            <select id="rule-match-type" class="mt-1 w-full text-sm border border-[var(--color-cream-dark)] rounded-lg px-3 py-2 bg-white">
+              {CARD_TYPES.map(t => <option value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-[var(--color-gray-warm)] uppercase">Match Department</label>
+            <select id="rule-match-dept" class="mt-1 w-full text-sm border border-[var(--color-cream-dark)] rounded-lg px-3 py-2 bg-white">
+              {DEPARTMENTS.map(d => <option value={d.value}>{d.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-[var(--color-gray-warm)] uppercase">Route To Role</label>
+            <select id="rule-route-role" class="mt-1 w-full text-sm border border-[var(--color-cream-dark)] rounded-lg px-3 py-2 bg-white">
+              {ROLES.map(r => <option value={r.value}>{r.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="rule-requires-approval" class="rounded" />
+            <label for="rule-requires-approval" class="text-sm text-[var(--color-charcoal)]">Requires Approval</label>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="rule-auto-engineering" class="rounded" />
+            <label for="rule-auto-engineering" class="text-sm text-[var(--color-charcoal)]">Auto → Engineering Queue</label>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button type="submit" class="px-4 py-2 text-sm font-bold text-white bg-[var(--color-teal)] rounded-lg hover:bg-[var(--color-teal-dark)] transition-colors">
+            Create Rule
+          </button>
+        </div>
+      </form>
+    </div>
+
     <!-- Rules list -->
     <div class="space-y-4">
       {rules.map((rule, index) => (
@@ -217,6 +277,40 @@ const formatLabel = (s: string | null) => {
           window.location.reload();
         }
       });
+    });
+
+    // Create new rule
+    document.getElementById('new-rule-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = (document.getElementById('rule-name') as HTMLInputElement).value.trim();
+      if (!name) return;
+
+      const newRule: Record<string, unknown> = {
+        name,
+        description: (document.getElementById('rule-description') as HTMLInputElement).value.trim() || null,
+        priority: parseInt((document.getElementById('rule-priority') as HTMLInputElement).value) || 50,
+        match_card_type: (document.getElementById('rule-match-type') as HTMLSelectElement).value || null,
+        match_department: (document.getElementById('rule-match-dept') as HTMLSelectElement).value || null,
+        route_to_role: (document.getElementById('rule-route-role') as HTMLSelectElement).value || null,
+        requires_approval: (document.getElementById('rule-requires-approval') as HTMLInputElement).checked,
+        auto_move_to_engineering: (document.getElementById('rule-auto-engineering') as HTMLInputElement).checked,
+        next_status: (document.getElementById('rule-auto-engineering') as HTMLInputElement).checked
+          ? 'engineering_queued'
+          : (document.getElementById('rule-requires-approval') as HTMLInputElement).checked
+            ? 'under_review'
+            : 'submitted',
+        is_active: true,
+      };
+
+      const { error } = await supabase.from('approval_rules').insert(newRule);
+
+      if (error) {
+        console.error('Failed to create rule:', error.message);
+        alert('Failed to create rule. Check console.');
+      } else {
+        window.location.reload();
+      }
     });
 
     // Seed default rules based on the plan's routing table

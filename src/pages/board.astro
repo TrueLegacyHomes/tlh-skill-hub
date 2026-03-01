@@ -58,14 +58,42 @@ const profilesMap: Record<string, Profile> = {};
       </div>
     </div>
 
-    <!-- Kanban Board Preact island -->
-    <div id="kanban-board-mount"
-      data-board-id={boardId}
-      data-columns={JSON.stringify(columns ?? [])}
-      data-cards={JSON.stringify(cards ?? [])}
-      data-profiles={JSON.stringify(profilesMap)}
-      data-current-user={JSON.stringify(profile)}
-    ></div>
+    {!board ? (
+      <!-- No board found — database probably not set up -->
+      <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-12 text-center max-w-lg mx-auto">
+        <p class="text-4xl mb-3">🗄️</p>
+        <h3 class="text-lg font-bold text-[var(--color-charcoal)] mb-2">Database Setup Needed</h3>
+        <p class="text-sm text-[var(--color-gray-warm)] mb-4">
+          The board hasn't been set up yet. An admin needs to run the database migration
+          in the Supabase SQL Editor to create the tables, columns, and seed data.
+        </p>
+        <p class="text-xs text-[var(--color-gray-warm)]">
+          File: <code class="bg-[var(--color-cream)] px-2 py-0.5 rounded">supabase/migration-001-init.sql</code>
+        </p>
+      </div>
+    ) : (
+      <!-- Kanban Board Preact island -->
+      <div id="kanban-board-mount"
+        data-board-id={boardId}
+        data-columns={JSON.stringify(columns ?? [])}
+        data-cards={JSON.stringify(cards ?? [])}
+        data-profiles={JSON.stringify(profilesMap)}
+        data-current-user={JSON.stringify(profile)}
+      >
+        <!-- Loading skeleton shown before Preact hydrates -->
+        <div class="flex gap-3 overflow-x-auto pb-4">
+          {(columns ?? []).map(() => (
+            <div class="flex flex-col min-w-[260px] max-w-[300px] bg-[var(--color-cream)] rounded-xl animate-pulse" style="flex: 1 0 260px">
+              <div class="h-10 rounded-t-xl bg-[var(--color-gray-warm)]/20"></div>
+              <div class="p-2 space-y-2">
+                <div class="h-20 bg-white/60 rounded-lg"></div>
+                <div class="h-20 bg-white/40 rounded-lg"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
   </div>
 
   <script>
