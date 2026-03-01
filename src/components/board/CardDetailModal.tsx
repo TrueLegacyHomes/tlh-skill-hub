@@ -124,6 +124,48 @@ export default function CardDetailModal({
         body: `Approved by ${currentUser.full_name}`,
         is_system: true,
       });
+
+      // Log activity
+      await client.from('activity_log').insert({
+        actor_id: currentUser.id,
+        action: 'card_approved',
+        card_id: card.id,
+        details: { title: card.title, to_status: targetColumn.status },
+      });
+
+      // Notify the card creator
+      if (card.created_by !== currentUser.id) {
+        await client.from('notifications').insert({
+          recipient_id: card.created_by,
+          card_id: card.id,
+          type: 'card_approved',
+          title: `Card approved: ${card.title}`,
+          body: `${currentUser.full_name} approved your card.`,
+        });
+      }
+
+      // Notify engineers if moved to engineering queue
+      if (targetColumn.status === 'engineering_queued') {
+        const { data: engineers } = await client
+          .from('profiles')
+          .select('id')
+          .eq('role', 'engineering')
+          .eq('is_active', true);
+
+        if (engineers) {
+          const notifs = engineers
+            .filter(e => e.id !== currentUser.id)
+            .map(e => ({
+              recipient_id: e.id,
+              card_id: card.id,
+              type: 'card_submitted' as const,
+              title: `New in Engineering Queue: ${card.title}`,
+              body: `Approved and ready for engineering pickup.`,
+            }));
+          if (notifs.length > 0) await client.from('notifications').insert(notifs);
+        }
+      }
+
       onCardUpdated(data);
     }
     setActionLoading(false);
@@ -154,6 +196,26 @@ export default function CardDetailModal({
         body: `Changes requested: ${reason}`,
         is_system: true,
       });
+
+      // Log activity
+      await client.from('activity_log').insert({
+        actor_id: currentUser.id,
+        action: 'card_rejected',
+        card_id: card.id,
+        details: { title: card.title, reason },
+      });
+
+      // Notify the card creator
+      if (card.created_by !== currentUser.id) {
+        await client.from('notifications').insert({
+          recipient_id: card.created_by,
+          card_id: card.id,
+          type: 'changes_requested',
+          title: `Changes requested: ${card.title}`,
+          body: `${currentUser.full_name} requested changes: ${reason}`,
+        });
+      }
+
       onCardUpdated(data);
       loadComments();
     }
@@ -183,6 +245,26 @@ export default function CardDetailModal({
         body: `Assigned to ${currentUser.full_name} (Engineer)`,
         is_system: true,
       });
+
+      // Log activity
+      await client.from('activity_log').insert({
+        actor_id: currentUser.id,
+        action: 'card_assigned',
+        card_id: card.id,
+        details: { title: card.title, assigned_to: currentUser.full_name },
+      });
+
+      // Notify the card creator
+      if (card.created_by !== currentUser.id) {
+        await client.from('notifications').insert({
+          recipient_id: card.created_by,
+          card_id: card.id,
+          type: 'card_assigned',
+          title: `Card picked up: ${card.title}`,
+          body: `${currentUser.full_name} is now working on your card.`,
+        });
+      }
+
       onCardUpdated(data);
     }
     setActionLoading(false);
@@ -211,6 +293,26 @@ export default function CardDetailModal({
         body: `Marked as Done by ${currentUser.full_name}`,
         is_system: true,
       });
+
+      // Log activity
+      await client.from('activity_log').insert({
+        actor_id: currentUser.id,
+        action: 'card_moved',
+        card_id: card.id,
+        details: { title: card.title, from_status: card.status, to_status: 'done' },
+      });
+
+      // Notify the card creator
+      if (card.created_by !== currentUser.id) {
+        await client.from('notifications').insert({
+          recipient_id: card.created_by,
+          card_id: card.id,
+          type: 'card_moved',
+          title: `Card completed: ${card.title}`,
+          body: `${currentUser.full_name} marked your card as Done.`,
+        });
+      }
+
       onCardUpdated(data);
     }
     setActionLoading(false);

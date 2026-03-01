@@ -207,6 +207,30 @@ export default function KanbanBoard({
       console.error('Failed to move card:', error.message);
       // Revert on error
       setCards(initialCards);
+    } else {
+      // Log activity for drag-and-drop moves
+      const sourceColumn = columns.find(c => c.id === card.column_id);
+      await client.from('activity_log').insert({
+        actor_id: currentUser.id,
+        action: 'card_moved',
+        card_id: activeId,
+        details: {
+          title: card.title,
+          from_status: sourceColumn?.status || card.status,
+          to_status: targetColumn.status,
+        },
+      });
+
+      // Notify card creator if someone else moved their card
+      if (card.created_by !== currentUser.id) {
+        await client.from('notifications').insert({
+          recipient_id: card.created_by,
+          card_id: activeId,
+          type: 'card_moved',
+          title: `Card moved: ${card.title}`,
+          body: `${currentUser.full_name} moved your card to ${targetColumn.name}.`,
+        });
+      }
     }
   }, [cards, columns, currentUser, client, initialCards]);
 
