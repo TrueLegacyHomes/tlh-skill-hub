@@ -40,13 +40,10 @@ if (user) {
     </div>
   </div>
 
-  <script define:vars={{ base }}>
-    import { createClient } from '@supabase/supabase-js';
+  <script>
+    import { supabase } from '../lib/supabase';
 
-    const supabase = createClient(
-      import.meta.env.PUBLIC_SUPABASE_URL,
-      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-    );
+    const base = import.meta.env.BASE_URL;
 
     document.getElementById('signin-microsoft')?.addEventListener('click', async () => {
       const { error } = await supabase.auth.signInWithOAuth({
