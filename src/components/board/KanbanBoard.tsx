@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import type { Card, Column, Profile, CardStatus } from '../../lib/types';
 import KanbanColumn from './KanbanColumn';
 import KanbanCard from './KanbanCard';
@@ -18,8 +18,6 @@ import CardDetailModal from './CardDetailModal';
 import NewCardForm from './NewCardForm';
 
 interface KanbanBoardProps {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
   initialColumns: Column[];
   initialCards: Card[];
   profiles: Record<string, Profile>;
@@ -28,8 +26,6 @@ interface KanbanBoardProps {
 }
 
 export default function KanbanBoard({
-  supabaseUrl,
-  supabaseAnonKey,
   initialColumns,
   initialCards,
   profiles,
@@ -44,8 +40,8 @@ export default function KanbanBoard({
   const [filterDepartment, setFilterDepartment] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
 
-  // Create a browser Supabase client for realtime + mutations
-  const [client] = useState(() => createClient(supabaseUrl, supabaseAnonKey));
+  // Shared authenticated browser client for realtime + mutations
+  const client = supabase;
 
   // Drag-and-drop sensors
   const sensors = useSensors(
@@ -299,8 +295,6 @@ export default function KanbanBoard({
           profiles={profiles}
           currentUser={currentUser}
           columns={columns}
-          supabaseUrl={supabaseUrl}
-          supabaseAnonKey={supabaseAnonKey}
           onClose={() => setSelectedCard(null)}
           onCardUpdated={(updatedCard) => {
             setCards(prev => prev.map(c => c.id === updatedCard.id ? updatedCard : c));
@@ -315,8 +309,6 @@ export default function KanbanBoard({
           boardId={boardId}
           columns={columns}
           currentUser={currentUser}
-          supabaseUrl={supabaseUrl}
-          supabaseAnonKey={supabaseAnonKey}
           onClose={() => setShowNewCardForm(false)}
           onCreated={handleCardCreated}
         />

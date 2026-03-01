@@ -2,24 +2,242 @@
 export const prerender = false;
 
 import Layout from '../layouts/Layout.astro';
+import type { Card, Profile } from '../lib/types';
 
+const supabase = Astro.locals.supabase;
 const profile = Astro.locals.profile;
+const user = Astro.locals.user;
+
+// Get all cards
+const { data: allCards } = await supabase
+  .from('cards')
+  .select('*')
+  .order('created_at', { ascending: false });
+
+const cards: Card[] = allCards ?? [];
+
+// Get all profiles
+const { data: allProfiles } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('is_active', true);
+
+const profiles: Profile[] = allProfiles ?? [];
+const profilesMap: Record<string, Profile> = {};
+profiles.forEach((p: Profile) => { profilesMap[p.id] = p; });
+
+// Get recent activity
+const { data: recentActivity } = await supabase
+  .from('activity_log')
+  .select('*')
+  .order('created_at', { ascending: false })
+  .limit(20);
+
+// ── Computed stats ──────────────────────────────
+const myCards = cards.filter(c => c.created_by === user?.id);
+const myAssigned = cards.filter(c => c.assigned_to === user?.id);
+const awaitingApproval = cards.filter(c =>
+  (c.status === 'submitted' || c.status === 'under_review') &&
+  (profile?.role === 'admin' || c.current_approver_id === user?.id)
+);
+const inProgress = cards.filter(c => c.status === 'in_progress');
+const doneThisWeek = cards.filter(c => {
+  if (!c.completed_at) return false;
+  const completed = new Date(c.completed_at);
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  return completed >= weekAgo;
+});
+
+// Department summary
+const deptCounts: Record<string, { total: number; done: number; inProgress: number }> = {};
+cards.forEach(c => {
+  if (!deptCounts[c.department]) {
+    deptCounts[c.department] = { total: 0, done: 0, inProgress: 0 };
+  }
+  deptCounts[c.department].total++;
+  if (c.status === 'done') deptCounts[c.department].done++;
+  if (c.status === 'in_progress') deptCounts[c.department].inProgress++;
+});
+
+const formatDept = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+const formatStatus = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+function getTimeAgo(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+  return date.toLocaleDateString();
+}
+
+const ACTION_LABELS: Record<string, string> = {
+  card_created: 'created a card',
+  card_moved: 'moved a card',
+  card_approved: 'approved a card',
+  card_rejected: 'requested changes',
+  card_assigned: 'assigned a card',
+  comment_added: 'commented on a card',
+};
 ---
 
 <Layout title="Dashboard">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-[var(--color-charcoal)]">Dashboard</h1>
-      <p class="text-sm text-[var(--color-gray-warm)]">Activity overview and your work</p>
+      <p class="text-sm text-[var(--color-gray-warm)]">
+        Welcome back, {profile?.full_name || 'Team Member'}
+      </p>
     </div>
 
-    <!-- Dashboard widgets will be Preact islands (Phase 5) -->
-    <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-12 text-center">
-      <div class="text-6xl mb-4">📊</div>
-      <h2 class="text-xl font-bold text-[var(--color-charcoal)] mb-2">Dashboard Coming in Phase 5</h2>
-      <p class="text-[var(--color-gray-warm)] max-w-md mx-auto">
-        Activity feed, approval queue, and department summaries will appear here.
-      </p>
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-xl shadow-sm border border-[var(--color-cream-dark)] p-4 text-center">
+        <p class="text-3xl font-bold text-[var(--color-teal)]">{myCards.length}</p>
+        <p class="text-xs text-[var(--color-gray-warm)] mt-1">My Cards</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-[var(--color-cream-dark)] p-4 text-center">
+        <p class="text-3xl font-bold text-[var(--color-navy)]">{awaitingApproval.length}</p>
+        <p class="text-xs text-[var(--color-gray-warm)] mt-1">Awaiting Approval</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-[var(--color-cream-dark)] p-4 text-center">
+        <p class="text-3xl font-bold text-[#d97706]">{inProgress.length}</p>
+        <p class="text-xs text-[var(--color-gray-warm)] mt-1">In Progress</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-[var(--color-cream-dark)] p-4 text-center">
+        <p class="text-3xl font-bold text-[#059669]">{doneThisWeek.length}</p>
+        <p class="text-xs text-[var(--color-gray-warm)] mt-1">Done This Week</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Approval Queue (left column, spans 2) -->
+      <div class="lg:col-span-2 space-y-6">
+        {/* Approval Queue */}
+        {awaitingApproval.length > 0 && (
+          <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-6">
+            <h2 class="text-lg font-bold text-[var(--color-charcoal)] mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-[#d97706]"></span>
+              Approval Queue
+            </h2>
+            <div class="space-y-3">
+              {awaitingApproval.slice(0, 10).map((card) => {
+                const creator = profilesMap[card.created_by];
+                return (
+                  <a href="/board/" class="block p-3 rounded-lg border border-[var(--color-cream-dark)] hover:bg-[var(--color-cream)] transition-colors no-underline">
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1">
+                        <p class="text-sm font-medium text-[var(--color-charcoal)]">{card.title}</p>
+                        <p class="text-xs text-[var(--color-gray-warm)] mt-0.5">
+                          {creator?.full_name || 'Unknown'} &middot; {formatDept(card.department)} &middot; {getTimeAgo(card.created_at)}
+                        </p>
+                      </div>
+                      <span class={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        card.priority === 1 ? 'bg-red-100 text-red-700' :
+                        card.priority === 2 ? 'bg-orange-100 text-orange-700' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        P{card.priority}
+                      </span>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* My Cards */}
+        <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-6">
+          <h2 class="text-lg font-bold text-[var(--color-charcoal)] mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-[var(--color-teal)]"></span>
+            My Cards
+          </h2>
+          {myCards.length === 0 && myAssigned.length === 0 ? (
+            <p class="text-sm text-[var(--color-gray-warm)]">You haven't created or been assigned any cards yet.</p>
+          ) : (
+            <div class="space-y-3">
+              {[...myCards, ...myAssigned.filter(c => c.created_by !== user?.id)].slice(0, 10).map((card) => (
+                <a href="/board/" class="block p-3 rounded-lg border border-[var(--color-cream-dark)] hover:bg-[var(--color-cream)] transition-colors no-underline">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-[var(--color-charcoal)]">{card.title}</p>
+                      <p class="text-xs text-[var(--color-gray-warm)] mt-0.5">
+                        {formatStatus(card.status)} &middot; {formatDept(card.department)}
+                      </p>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded bg-[var(--color-teal-light)] text-[var(--color-teal-dark)]">
+                      {formatStatus(card.status)}
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Department Summary */}
+        <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-6">
+          <h2 class="text-lg font-bold text-[var(--color-charcoal)] mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-[var(--color-navy)]"></span>
+            Department Summary
+          </h2>
+          {Object.keys(deptCounts).length === 0 ? (
+            <p class="text-sm text-[var(--color-gray-warm)]">No cards submitted yet.</p>
+          ) : (
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {Object.entries(deptCounts).map(([dept, counts]) => (
+                <div class="p-3 rounded-lg border border-[var(--color-cream-dark)]">
+                  <p class="text-sm font-bold text-[var(--color-charcoal)]">{formatDept(dept)}</p>
+                  <div class="flex items-center gap-3 mt-1">
+                    <span class="text-xs text-[var(--color-gray-warm)]">{counts.total} total</span>
+                    <span class="text-xs text-[#059669]">{counts.done} done</span>
+                    <span class="text-xs text-[#d97706]">{counts.inProgress} active</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <!-- Activity Feed (right column) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-6">
+        <h2 class="text-lg font-bold text-[var(--color-charcoal)] mb-4 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#6b7280]"></span>
+          Recent Activity
+        </h2>
+        {!recentActivity || recentActivity.length === 0 ? (
+          <p class="text-sm text-[var(--color-gray-warm)]">No activity yet.</p>
+        ) : (
+          <div class="space-y-4">
+            {recentActivity.map((activity: any) => {
+              const actor = profilesMap[activity.actor_id];
+              const actionLabel = ACTION_LABELS[activity.action] || activity.action;
+              return (
+                <div class="flex gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[var(--color-cream)] text-[var(--color-gray-warm)] flex items-center justify-center text-xs font-bold shrink-0">
+                    {actor?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-[var(--color-charcoal)]">
+                      <span class="font-medium">{actor?.full_name || 'Unknown'}</span>
+                      {' '}{actionLabel}
+                    </p>
+                    {activity.details?.title && (
+                      <p class="text-xs text-[var(--color-gray-warm)] truncate">"{activity.details.title}"</p>
+                    )}
+                    <p class="text-[10px] text-[var(--color-gray-warm)] mt-0.5">{getTimeAgo(activity.created_at)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   </div>
 </Layout>

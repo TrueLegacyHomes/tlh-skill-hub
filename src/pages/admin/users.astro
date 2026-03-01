@@ -1,0 +1,165 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import type { Profile } from '../../lib/types';
+
+const supabase = Astro.locals.supabase;
+const profile = Astro.locals.profile;
+
+// Get all profiles
+const { data: allProfiles } = await supabase
+  .from('profiles')
+  .select('*')
+  .order('full_name', { ascending: true });
+
+const users: Profile[] = allProfiles ?? [];
+
+const ROLES = [
+  { value: 'admin', label: 'Admin' },
+  { value: 'department_head', label: 'Dept Head' },
+  { value: 'team_member', label: 'Team Member' },
+  { value: 'engineering', label: 'Engineering' },
+];
+
+const DEPARTMENTS = [
+  { value: 'executive', label: 'Executive' },
+  { value: 'operations', label: 'Operations' },
+  { value: 'interior_design', label: 'Interior Design' },
+  { value: 'estate_sales', label: 'Estate Sales' },
+  { value: 'home_acquisitions', label: 'Home Acquisitions' },
+  { value: 'care_placement', label: 'Care Placement' },
+  { value: 'marketing', label: 'Marketing' },
+  { value: 'engineering', label: 'Engineering' },
+];
+
+const formatDept = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+---
+
+<Layout title="User Management">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-1">
+        <a href="/board/" class="text-sm text-[var(--color-teal)] hover:underline">&larr; Board</a>
+        <span class="text-[var(--color-gray-warm)]">/</span>
+        <span class="text-sm text-[var(--color-gray-warm)]">Admin</span>
+      </div>
+      <h1 class="text-2xl font-bold text-[var(--color-charcoal)]">User Management</h1>
+      <p class="text-sm text-[var(--color-gray-warm)]">Manage team roles and departments. Changes take effect immediately.</p>
+    </div>
+
+    <!-- Nav -->
+    <div class="flex gap-2 mb-6">
+      <a href="/admin/users/" class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-teal)] rounded-lg no-underline">Users</a>
+      <a href="/admin/rules/" class="px-4 py-2 text-sm font-medium text-[var(--color-charcoal)] border border-[var(--color-cream-dark)] rounded-lg hover:bg-[var(--color-cream)] no-underline">Approval Rules</a>
+    </div>
+
+    <!-- Users table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-[var(--color-cream)] text-left">
+            <th class="px-4 py-3 font-bold text-[var(--color-charcoal)]">Name</th>
+            <th class="px-4 py-3 font-bold text-[var(--color-charcoal)]">Email</th>
+            <th class="px-4 py-3 font-bold text-[var(--color-charcoal)]">Role</th>
+            <th class="px-4 py-3 font-bold text-[var(--color-charcoal)]">Department</th>
+            <th class="px-4 py-3 font-bold text-[var(--color-charcoal)]">Active</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((u) => (
+            <tr class="border-t border-[var(--color-cream-dark)] hover:bg-[var(--color-cream)]/50 transition-colors" data-user-id={u.id}>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-[var(--color-teal)] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+                    {u.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </div>
+                  <span class="font-medium text-[var(--color-charcoal)]">{u.full_name}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-[var(--color-gray-warm)]">{u.email}</td>
+              <td class="px-4 py-3">
+                <select
+                  data-field="role"
+                  data-user-id={u.id}
+                  class="user-field text-xs border border-[var(--color-cream-dark)] rounded px-2 py-1 bg-white"
+                >
+                  {ROLES.map(r => (
+                    <option value={r.value} selected={u.role === r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </td>
+              <td class="px-4 py-3">
+                <select
+                  data-field="department"
+                  data-user-id={u.id}
+                  class="user-field text-xs border border-[var(--color-cream-dark)] rounded px-2 py-1 bg-white"
+                >
+                  {DEPARTMENTS.map(d => (
+                    <option value={d.value} selected={u.department === d.value}>{d.label}</option>
+                  ))}
+                </select>
+              </td>
+              <td class="px-4 py-3">
+                <input
+                  type="checkbox"
+                  data-field="is_active"
+                  data-user-id={u.id}
+                  class="user-field"
+                  checked={u.is_active}
+                />
+              </td>
+            </tr>
+          ))}
+          {users.length === 0 && (
+            <tr>
+              <td colspan="5" class="px-4 py-8 text-center text-[var(--color-gray-warm)]">
+                No users found. Users are created automatically when team members sign in for the first time.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="text-xs text-[var(--color-gray-warm)] mt-3">
+      Users are auto-created on first Microsoft sign-in. Edit their role and department here.
+    </p>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase';
+
+    // Auto-save on change
+    document.querySelectorAll('.user-field').forEach(el => {
+      const eventType = el.tagName === 'SELECT' ? 'change' : 'change';
+      el.addEventListener(eventType, async (e) => {
+        const target = e.target as HTMLSelectElement | HTMLInputElement;
+        const userId = target.dataset.userId;
+        const field = target.dataset.field;
+        if (!userId || !field) return;
+
+        const value = target.type === 'checkbox'
+          ? (target as HTMLInputElement).checked
+          : target.value;
+
+        const { error } = await supabase
+          .from('profiles')
+          .update({ [field]: value })
+          .eq('id', userId);
+
+        if (error) {
+          console.error('Failed to update user:', error.message);
+          alert('Failed to save. Check console for details.');
+        } else {
+          // Brief green flash to confirm save
+          const row = target.closest('tr');
+          if (row) {
+            row.style.backgroundColor = '#e6f7f6';
+            setTimeout(() => { row.style.backgroundColor = ''; }, 500);
+          }
+        }
+      });
+    });
+  </script>
+</Layout>

@@ -51,22 +51,20 @@ const profile = Astro.locals?.profile ?? null;
             <a href={`${base}workflows/`} class="px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-teal-light)] hover:text-[var(--color-teal-dark)] transition-colors no-underline">
               Workflows
             </a>
-            {user && (
-              <>
-                <span class="hidden sm:inline text-[var(--color-cream-dark)]">|</span>
-                <a href={`${base}board/`} class="px-3 py-2 rounded-lg text-sm font-medium text-white bg-[var(--color-teal)] hover:bg-[var(--color-teal-dark)] transition-colors no-underline">
-                  Board
-                </a>
-                <a href={`${base}dashboard/`} class="px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-teal-light)] hover:text-[var(--color-teal-dark)] transition-colors no-underline">
-                  Dashboard
-                </a>
-              </>
-            )}
+            <span id="auth-nav-links" style={user ? '' : 'display:none'}>
+              <span class="hidden sm:inline text-[var(--color-cream-dark)]">|</span>
+              <a href={`${base}board/`} class="px-3 py-2 rounded-lg text-sm font-medium text-white bg-[var(--color-teal)] hover:bg-[var(--color-teal-dark)] transition-colors no-underline">
+                Board
+              </a>
+              <a href={`${base}dashboard/`} class="px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-teal-light)] hover:text-[var(--color-teal-dark)] transition-colors no-underline">
+                Dashboard
+              </a>
+            </span>
             <div class="ml-2">
               {user && profile ? (
                 <div id="user-menu-mount" data-profile={JSON.stringify(profile)}></div>
               ) : (
-                <a href={`${base}login/`} class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-navy)] rounded-lg hover:bg-[#0d3a63] transition-colors no-underline">
+                <a id="signin-link" href={`${base}login/`} class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-navy)] rounded-lg hover:bg-[#0d3a63] transition-colors no-underline">
                   Sign In
                 </a>
               )}
@@ -94,6 +92,21 @@ const profile = Astro.locals?.profile ?? null;
             });
           });
         }
+      }
+
+      // On static pages, auth nav links are hidden at build time.
+      // Check client-side for a Supabase session and show them if logged in.
+      const authNav = document.getElementById('auth-nav-links');
+      const signInLink = document.getElementById('signin-link');
+      if (authNav && authNav.style.display === 'none') {
+        import('../lib/supabase').then(({ supabase }) => {
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+              authNav.style.display = '';
+              if (signInLink) signInLink.style.display = 'none';
+            }
+          });
+        });
       }
     </script>
 

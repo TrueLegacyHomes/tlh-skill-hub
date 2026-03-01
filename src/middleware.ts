@@ -3,7 +3,23 @@ import { createSupabaseServerClient } from './lib/supabase';
 
 const PROTECTED_ROUTES = ['/board', '/dashboard', '/admin'];
 
+// Routes that require SSR auth checks (all others are static and skip auth)
+const SSR_ROUTES = ['/board', '/dashboard', '/admin', '/login', '/auth'];
+
 export const onRequest = defineMiddleware(async (context, next) => {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const rawPathname = context.url.pathname.replace(/\/$/, '');
+  const pathname = rawPathname.startsWith(base) ? rawPathname.slice(base.length) : rawPathname;
+
+  // Only run auth for SSR routes — static pages don't need server-side auth
+  const needsAuth = SSR_ROUTES.some(r => pathname.startsWith(r));
+
+  if (!needsAuth) {
+    context.locals.user = null;
+    context.locals.profile = null;
+    return next();
+  }
+
   const supabase = createSupabaseServerClient(context.request, context.cookies);
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -22,9 +38,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Protect routes that need auth
-  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-  const rawPathname = context.url.pathname.replace(/\/$/, '');
-  const pathname = rawPathname.startsWith(base) ? rawPathname.slice(base.length) : rawPathname;
   const isProtected = PROTECTED_ROUTES.some(r => pathname.startsWith(r));
 
   if (isProtected && !user) {

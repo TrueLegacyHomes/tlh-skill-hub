@@ -42,8 +42,6 @@ const profilesMap: Record<string, Profile> = {};
   profilesMap[p.id] = p;
 });
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout title="Workflow Board">
@@ -62,8 +60,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
     <!-- Kanban Board Preact island -->
     <div id="kanban-board-mount"
-      data-supabase-url={supabaseUrl}
-      data-supabase-anon-key={supabaseAnonKey}
       data-board-id={boardId}
       data-columns={JSON.stringify(columns ?? [])}
       data-cards={JSON.stringify(cards ?? [])}
@@ -76,8 +72,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     const mount = document.getElementById('kanban-board-mount');
     if (mount) {
       const props = {
-        supabaseUrl: mount.dataset.supabaseUrl,
-        supabaseAnonKey: mount.dataset.supabaseAnonKey,
         boardId: mount.dataset.boardId,
         initialColumns: JSON.parse(mount.dataset.columns || '[]'),
         initialCards: JSON.parse(mount.dataset.cards || '[]'),

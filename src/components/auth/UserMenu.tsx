@@ -53,6 +53,14 @@ export default function UserMenu({ profile }: Props) {
                 {roleBadge[profile.role] || profile.role}
               </span>
             </div>
+            {profile.role === 'admin' && (
+              <a
+                href="/admin/users/"
+                class="block w-full text-left px-4 py-2 text-sm text-[var(--color-charcoal)] hover:bg-[var(--color-cream)] transition-colors no-underline"
+              >
+                Admin Panel
+              </a>
+            )}
             <button
               onClick={handleSignOut}
               class="w-full text-left px-4 py-2 text-sm text-[var(--color-charcoal)] hover:bg-[var(--color-cream)] transition-colors"

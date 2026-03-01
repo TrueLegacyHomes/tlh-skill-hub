@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import type { Card, Column, Profile, Comment } from '../../lib/types';
 
 interface CardDetailModalProps {
@@ -7,8 +7,6 @@ interface CardDetailModalProps {
   profiles: Record<string, Profile>;
   currentUser: Profile;
   columns: Column[];
-  supabaseUrl: string;
-  supabaseAnonKey: string;
   onClose: () => void;
   onCardUpdated: (card: Card) => void;
 }
@@ -48,8 +46,6 @@ export default function CardDetailModal({
   profiles,
   currentUser,
   columns,
-  supabaseUrl,
-  supabaseAnonKey,
   onClose,
   onCardUpdated,
 }: CardDetailModalProps) {
@@ -58,7 +54,7 @@ export default function CardDetailModal({
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const client = createClient(supabaseUrl, supabaseAnonKey);
+  const client = supabase;
   const isAdmin = currentUser.role === 'admin';
   const isApprover = isAdmin || card.current_approver_id === currentUser.id;
   const isOwner = card.created_by === currentUser.id;

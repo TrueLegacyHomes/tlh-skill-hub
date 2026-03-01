@@ -1,13 +1,11 @@
 import { useState } from 'preact/hooks';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import type { Card, Column, Profile, CardType, Department, ImpactLevel, UrgencyLevel } from '../../lib/types';
 
 interface NewCardFormProps {
   boardId: string;
   columns: Column[];
   currentUser: Profile;
-  supabaseUrl: string;
-  supabaseAnonKey: string;
   onClose: () => void;
   onCreated: (card: Card) => void;
 }
@@ -40,8 +38,6 @@ export default function NewCardForm({
   boardId,
   columns,
   currentUser,
-  supabaseUrl,
-  supabaseAnonKey,
   onClose,
   onCreated,
 }: NewCardFormProps) {
@@ -59,7 +55,7 @@ export default function NewCardForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const client = createClient(supabaseUrl, supabaseAnonKey);
+  const client = supabase;
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
