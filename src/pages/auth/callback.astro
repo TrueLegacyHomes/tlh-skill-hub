@@ -1,36 +1,26 @@
 ---
 export const prerender = false;
 
-import Layout from '../../layouts/Layout.astro';
+import { createSupabaseServerClient } from '../../lib/supabase';
 
 const base = import.meta.env.BASE_URL;
+
+// Supabase PKCE flow sends the auth code as a query parameter
+const code = Astro.url.searchParams.get('code');
+
+if (code) {
+  const supabase = createSupabaseServerClient(Astro.request, Astro.cookies);
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (!error) {
+    return Astro.redirect(`${base}board/`);
+  }
+
+  // If exchange failed, redirect to login with error hint
+  console.error('Auth code exchange failed:', error.message);
+  return Astro.redirect(`${base}login/`);
+}
+
+// No code in URL — redirect to login
+return Astro.redirect(`${base}login/`);
 ---
-
-<Layout title="Signing in...">
-  <div class="max-w-md mx-auto px-4 py-20 text-center">
-    <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-8">
-      <div class="animate-spin w-8 h-8 border-4 border-[var(--color-teal)] border-t-transparent rounded-full mx-auto mb-4"></div>
-      <p class="text-[var(--color-gray-warm)]">Completing sign in...</p>
-    </div>
-  </div>
-
-  <script>
-    import { supabase } from '../../lib/supabase';
-
-    const base = import.meta.env.BASE_URL;
-
-    // Handle the OAuth callback
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        window.location.href = `${base}board/`;
-      }
-    });
-
-    // Also check if already signed in (redirect may have set cookies)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        window.location.href = `${base}board/`;
-      }
-    });
-  </script>
-</Layout>
