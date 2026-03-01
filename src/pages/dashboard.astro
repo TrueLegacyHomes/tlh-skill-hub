@@ -1,0 +1,25 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+
+const profile = Astro.locals.profile;
+---
+
+<Layout title="Dashboard">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-[var(--color-charcoal)]">Dashboard</h1>
+      <p class="text-sm text-[var(--color-gray-warm)]">Activity overview and your work</p>
+    </div>
+
+    <!-- Dashboard widgets will be Preact islands (Phase 5) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-12 text-center">
+      <div class="text-6xl mb-4">📊</div>
+      <h2 class="text-xl font-bold text-[var(--color-charcoal)] mb-2">Dashboard Coming in Phase 5</h2>
+      <p class="text-[var(--color-gray-warm)] max-w-md mx-auto">
+        Activity feed, approval queue, and department summaries will appear here.
+      </p>
+    </div>
+  </div>
+</Layout>

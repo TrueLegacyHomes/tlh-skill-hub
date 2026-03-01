@@ -1,0 +1,65 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+
+const base = import.meta.env.BASE_URL;
+const user = Astro.locals.user;
+
+// If already logged in, redirect to board
+if (user) {
+  return Astro.redirect(`${base}board/`);
+}
+---
+
+<Layout title="Sign In">
+  <div class="max-w-md mx-auto px-4 py-20">
+    <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-cream-dark)] p-8 text-center">
+      <img src={`${base}leaf-small.png`} alt="TLH" class="w-12 h-12 mx-auto mb-4 object-contain" />
+      <h1 class="text-2xl font-bold text-[var(--color-charcoal)] mb-2">Sign in to Skill Hub</h1>
+      <p class="text-[var(--color-gray-warm)] mb-8">Use your company Microsoft account to access the workflow board.</p>
+
+      <button
+        id="signin-microsoft"
+        class="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[var(--color-navy)] text-white font-medium rounded-lg hover:bg-[#0d3a63] transition-colors cursor-pointer"
+      >
+        <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+          <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+          <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+          <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+        </svg>
+        Sign in with Microsoft
+      </button>
+
+      <div class="mt-6 pt-6 border-t border-[var(--color-cream-dark)]">
+        <p class="text-xs text-[var(--color-gray-warm)]">
+          Don't have access? Contact your admin to get an account set up.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ base }}>
+    import { createClient } from '@supabase/supabase-js';
+
+    const supabase = createClient(
+      import.meta.env.PUBLIC_SUPABASE_URL,
+      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    document.getElementById('signin-microsoft')?.addEventListener('click', async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          redirectTo: `${window.location.origin}${base}auth/callback/`,
+          scopes: 'email profile',
+        },
+      });
+      if (error) {
+        console.error('Sign in error:', error.message);
+        alert('Sign in failed. Please try again.');
+      }
+    });
+  </script>
+</Layout>

@@ -1,0 +1,95 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+import type { Profile } from '../lib/types';
+
+const supabase = Astro.locals.supabase;
+const profile = Astro.locals.profile;
+
+// Get the default board
+const { data: board } = await supabase
+  .from('boards')
+  .select('id')
+  .eq('is_default', true)
+  .single();
+
+const boardId = board?.id ?? '';
+
+// Get columns ordered by position
+const { data: columns } = await supabase
+  .from('columns')
+  .select('*')
+  .eq('board_id', boardId)
+  .order('position', { ascending: true });
+
+// Get all cards for this board
+const { data: cards } = await supabase
+  .from('cards')
+  .select('*')
+  .eq('board_id', boardId)
+  .order('composite_score', { ascending: false });
+
+// Get all active profiles for display
+const { data: allProfiles } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('is_active', true);
+
+// Build a lookup map: { id → profile }
+const profilesMap: Record<string, Profile> = {};
+(allProfiles ?? []).forEach((p: Profile) => {
+  profilesMap[p.id] = p;
+});
+
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+
+<Layout title="Workflow Board">
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-[var(--color-charcoal)]">Workflow Board</h1>
+        <p class="text-sm text-[var(--color-gray-warm)]">
+          Welcome, {profile?.full_name || 'Team Member'}
+          <span class="ml-2 px-2 py-0.5 text-xs font-medium bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] rounded-full">
+            {profile?.role || 'team_member'}
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Kanban Board Preact island -->
+    <div id="kanban-board-mount"
+      data-supabase-url={supabaseUrl}
+      data-supabase-anon-key={supabaseAnonKey}
+      data-board-id={boardId}
+      data-columns={JSON.stringify(columns ?? [])}
+      data-cards={JSON.stringify(cards ?? [])}
+      data-profiles={JSON.stringify(profilesMap)}
+      data-current-user={JSON.stringify(profile)}
+    ></div>
+  </div>
+
+  <script>
+    const mount = document.getElementById('kanban-board-mount');
+    if (mount) {
+      const props = {
+        supabaseUrl: mount.dataset.supabaseUrl,
+        supabaseAnonKey: mount.dataset.supabaseAnonKey,
+        boardId: mount.dataset.boardId,
+        initialColumns: JSON.parse(mount.dataset.columns || '[]'),
+        initialCards: JSON.parse(mount.dataset.cards || '[]'),
+        profiles: JSON.parse(mount.dataset.profiles || '{}'),
+        currentUser: JSON.parse(mount.dataset.currentUser || '{}'),
+      };
+
+      import('../components/board/KanbanBoard.tsx').then(({ default: KanbanBoard }) => {
+        import('preact').then(({ render, h }) => {
+          render(h(KanbanBoard, props), mount);
+        });
+      });
+    }
+  </script>
+</Layout>
