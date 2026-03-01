@@ -3,16 +3,16 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { Card, Column, Profile } from '../../lib/types';
 import KanbanCard from './KanbanCard';
 
-/** Column header colors from the plan */
+/** Column header colors — TLH brand palette: teal → navy → purple → warm gray */
 const COLUMN_COLORS: Record<string, string> = {
-  submitted: '#38b5ad',
-  under_review: '#d97706',
-  changes_requested: '#dc2626',
-  approved: '#059669',
-  engineering_queued: '#0f4676',
-  in_progress: '#7c3aed',
-  done: '#6b7280',
-  archived: '#9ca3af',
+  submitted: '#38b5ad',           // teal (brand primary)
+  under_review: '#0f4676',        // navy (brand secondary)
+  changes_requested: '#c07a3e',   // warm copper (complements cream background)
+  approved: '#2a908a',            // deep teal (positive, on-brand)
+  engineering_queued: '#3d5a80',  // slate blue (bridge to engineering)
+  in_progress: '#a47eaf',         // purple (brand secondary)
+  done: '#7a7568',                // warm gray (muted, complete)
+  archived: '#a39e93',            // light warm gray
 };
 
 interface KanbanColumnProps {
