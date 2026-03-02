@@ -1,11 +1,15 @@
 ---
+export const prerender = false;
+
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
+import { getAllGoalsWithSkills } from '../lib/db/goals';
 
-const allSkills = await getCollection('skills');
 const base = import.meta.env.BASE_URL;
+const supabase = Astro.locals.supabase;
 
-// Build the skill data for the wizard (include recommendedFor and githubPath)
+// Build skill data from content collection (always needed for metadata + prompt generation)
+const allSkills = await getCollection('skills');
 const skillsData = allSkills
   .filter(s => s.data.status !== 'not-built')
   .sort((a, b) => (a.data.skillId || '').localeCompare(b.data.skillId || '', undefined, { numeric: true }))
@@ -21,21 +25,73 @@ const skillsData = allSkills
     githubPath: s.data.githubPath || '',
   }));
 
-// Build goal → skill mappings from frontmatter data (Blueprints first, then Foundation, by skillId)
-const goalKeys = ['define', 'build', 'automate', 'document', 'report', 'change', 'improve', 'reference'];
-const goalSkillsMap: Record<string, string[]> = {};
-for (const goal of goalKeys) {
-  const matching = skillsData
-    .filter(s => s.recommendedFor.includes(goal))
-    .sort((a, b) => {
-      // Blueprints (2.xx) before Foundation (1.xx), then by skillId
-      const seriesA = a.skillId.startsWith('2') ? 0 : 1;
-      const seriesB = b.skillId.startsWith('2') ? 0 : 1;
-      if (seriesA !== seriesB) return seriesA - seriesB;
-      return a.skillId.localeCompare(b.skillId, undefined, { numeric: true });
-    })
-    .map(s => s.skillId);
-  goalSkillsMap[goal] = matching;
+// Try to load goals from Supabase; fall back to frontmatter if unavailable
+let goalSkillsMap: Record<string, string[]> = {};
+let goalLabels: Record<string, string> = {};
+let goalDescriptions: Record<string, string> = {};
+
+interface GoalButtonData {
+  slug: string;
+  name: string;
+  description: string;
+}
+let goalButtons: GoalButtonData[] = [];
+
+const goalsWithSkills = await getAllGoalsWithSkills(supabase);
+
+if (goalsWithSkills.length > 0) {
+  // ── Supabase-driven (primary) ──
+  for (const goal of goalsWithSkills) {
+    goalSkillsMap[goal.slug] = goal.skills.map(gs => gs.skill_id);
+    goalLabels[goal.slug] = goal.parent_name
+      ? `${goal.parent_name} > ${goal.name}`
+      : goal.name;
+    goalDescriptions[goal.slug] = goal.description || '';
+    goalButtons.push({
+      slug: goal.slug,
+      name: goal.parent_name ? `${goal.parent_name} > ${goal.name}` : goal.name,
+      description: goal.description || '',
+    });
+  }
+} else {
+  // ── Fallback: frontmatter-driven (legacy) ──
+  const fallbackGoals = [
+    { slug: 'define', name: 'Define a problem', description: 'Scope and clarify an issue before solving it' },
+    { slug: 'build', name: 'Build something new', description: 'Create a new product, process, or system' },
+    { slug: 'automate', name: 'Automate a workflow', description: 'Reduce manual steps with automation' },
+    { slug: 'document', name: 'Document a process', description: 'Create an SOP, template, or guide' },
+    { slug: 'report', name: 'Create a report or dashboard', description: 'Track metrics and visualize data' },
+    { slug: 'change', name: 'Request a system change', description: 'Modify an existing system or platform' },
+    { slug: 'improve', name: 'Improve AI skills', description: 'Build, check, or manage skills themselves' },
+    { slug: 'reference', name: 'Look up company info', description: 'Brand, people, tools, or company details' },
+  ];
+
+  const fallbackDescriptions: Record<string, string> = {
+    define: 'Start by clearly defining the problem, then move to the right blueprint skill.',
+    build: 'Define the problem first, plan the product, then create a handoff brief for engineering.',
+    automate: 'Define the problem first, then plan the automation and reference your tools.',
+    document: 'Create SOPs or templates with standardized formats.',
+    report: 'Plan your report or dashboard with the right metrics and data sources.',
+    change: 'Define the problem first, then submit a structured change request.',
+    improve: 'Use the skill builder to create new skills, quality checker to validate, and memory manager for context.',
+    reference: 'These foundational skills provide company context and information.',
+  };
+
+  for (const g of fallbackGoals) {
+    const matching = skillsData
+      .filter(s => s.recommendedFor.includes(g.slug))
+      .sort((a, b) => {
+        const seriesA = a.skillId.startsWith('2') ? 0 : 1;
+        const seriesB = b.skillId.startsWith('2') ? 0 : 1;
+        if (seriesA !== seriesB) return seriesA - seriesB;
+        return a.skillId.localeCompare(b.skillId, undefined, { numeric: true });
+      })
+      .map(s => s.skillId);
+    goalSkillsMap[g.slug] = matching;
+    goalLabels[g.slug] = g.name;
+    goalDescriptions[g.slug] = fallbackDescriptions[g.slug] || g.description;
+    goalButtons.push(g);
+  }
 }
 ---
 
@@ -48,42 +104,19 @@ for (const goal of goalKeys) {
 
     <!-- Wizard -->
     <div id="wizard" class="space-y-6">
-      <!-- Step 1: Choose a Goal -->
+      <!-- Step 1: Choose a Goal (dynamic from DB or fallback) -->
       <div class="wizard-step bg-white rounded-xl border border-[var(--color-cream-dark)] p-6" data-step="1">
         <h2 class="text-lg font-bold text-[var(--color-charcoal)] mb-4">Choose a Goal</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="define">
-            <span class="block font-bold text-[var(--color-charcoal)]">Define a problem</span>
-            <span class="text-[var(--color-gray-warm)]">Scope and clarify an issue before solving it</span>
-          </button>
-          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="build">
-            <span class="block font-bold text-[var(--color-charcoal)]">Build something new</span>
-            <span class="text-[var(--color-gray-warm)]">Create a new product, process, or system</span>
-          </button>
-          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="automate">
-            <span class="block font-bold text-[var(--color-charcoal)]">Automate a workflow</span>
-            <span class="text-[var(--color-gray-warm)]">Reduce manual steps with automation</span>
-          </button>
-          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="document">
-            <span class="block font-bold text-[var(--color-charcoal)]">Document a process</span>
-            <span class="text-[var(--color-gray-warm)]">Create an SOP, template, or guide</span>
-          </button>
-          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="report">
-            <span class="block font-bold text-[var(--color-charcoal)]">Create a report or dashboard</span>
-            <span class="text-[var(--color-gray-warm)]">Track metrics and visualize data</span>
-          </button>
-          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="change">
-            <span class="block font-bold text-[var(--color-charcoal)]">Request a system change</span>
-            <span class="text-[var(--color-gray-warm)]">Modify an existing system or platform</span>
-          </button>
-          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="improve">
-            <span class="block font-bold text-[var(--color-charcoal)]">Improve AI skills</span>
-            <span class="text-[var(--color-gray-warm)]">Build, check, or manage skills themselves</span>
-          </button>
-          <button class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors" data-goal="reference">
-            <span class="block font-bold text-[var(--color-charcoal)]">Look up company info</span>
-            <span class="text-[var(--color-gray-warm)]">Brand, people, tools, or company details</span>
-          </button>
+          {goalButtons.map(g => (
+            <button
+              class="goal-btn px-4 py-3 rounded-lg border-2 border-[var(--color-cream-dark)] text-left text-sm font-medium hover:border-[var(--color-teal)] hover:bg-[var(--color-teal-light)] transition-colors"
+              data-goal={g.slug}
+            >
+              <span class="block font-bold text-[var(--color-charcoal)]">{g.name}</span>
+              <span class="text-[var(--color-gray-warm)]">{g.description}</span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -100,32 +133,9 @@ for (const goal of goalKeys) {
   </section>
 </Layout>
 
-<script define:vars={{ skillsData, goalSkillsMap, base }}>
-  // Goal → skill ID mappings (built from skill frontmatter at build time)
+<script define:vars={{ skillsData, goalSkillsMap, goalLabels, goalDescriptions, base }}>
+  // Goal → skill ID mappings (from Supabase or frontmatter fallback)
   const goalSkills = goalSkillsMap;
-
-  // Goal labels for prompt context
-  const goalLabels = {
-    define: 'Define a problem',
-    build: 'Build something new',
-    automate: 'Automate a workflow',
-    document: 'Document a process',
-    report: 'Create a report or dashboard',
-    change: 'Request a system change',
-    improve: 'Improve AI skills',
-    reference: 'Look up company info',
-  };
-
-  const goalDescriptions = {
-    define: 'Start by clearly defining the problem, then move to the right blueprint skill.',
-    build: 'Define the problem first, plan the product, then create a handoff brief for engineering.',
-    automate: 'Define the problem first, then plan the automation and reference your tools.',
-    document: 'Create SOPs or templates with standardized formats.',
-    report: 'Plan your report or dashboard with the right metrics and data sources.',
-    change: 'Define the problem first, then submit a structured change request.',
-    improve: 'Use the skill builder to create new skills, quality checker to validate, and memory manager for context.',
-    reference: 'These foundational skills provide company context and information.',
-  };
 
   document.querySelectorAll('.goal-btn').forEach(btn => {
     btn.addEventListener('click', () => {

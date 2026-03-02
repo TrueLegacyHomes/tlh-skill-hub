@@ -21,3 +21,4 @@ export * from './comments';
 export * from './notifications';
 export * from './activity';
 export * from './approval-rules';
+export * from './goals';

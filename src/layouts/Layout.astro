@@ -59,6 +59,11 @@ const profile = Astro.locals?.profile ?? null;
               <a href={`${base}dashboard/`} class="px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-teal-light)] hover:text-[var(--color-teal-dark)] transition-colors no-underline">
                 Dashboard
               </a>
+              {profile?.role === 'admin' && (
+                <a href={`${base}admin/users/`} class="px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-charcoal)] hover:bg-[var(--color-teal-light)] hover:text-[var(--color-teal-dark)] transition-colors no-underline">
+                  Admin
+                </a>
+              )}
             </span>
             <div class="ml-2 flex items-center gap-1">
               {user && profile ? (

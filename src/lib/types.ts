@@ -108,6 +108,34 @@ export interface Notification {
   created_at: string;
 }
 
+// ── Goals & Goal-Skill Associations ──
+
+export interface Goal {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  parent_id: string | null;
+  display_order: number;
+  created_at: string;
+}
+
+export interface GoalSkill {
+  id: string;
+  goal_id: string;
+  skill_id: string;
+  display_order: number;
+  created_at: string;
+}
+
+/** Goal with its ordered skills and optional parent name for display */
+export interface GoalWithSkills extends Goal {
+  skills: GoalSkill[];
+  parent_name?: string;
+}
+
+// ── Approval Rules ──
+
 export interface ApprovalRule {
   id: string;
   name: string;

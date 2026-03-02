@@ -1,80 +1,31 @@
 ---
+export const prerender = false;
+
 import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import { getAllGoalsWithSkills } from '../lib/db/goals';
 
 const base = import.meta.env.BASE_URL;
+const supabase = Astro.locals.supabase;
+const profile = Astro.locals.profile ?? null;
 
-const workflows = [
-  {
-    title: 'New Project from Scratch',
-    description: 'Starting with an idea and need to turn it into an actionable plan with a handoff brief for engineering.',
-    steps: [
-      { id: '2.01', name: 'Problem Definer', action: 'Define and scope the problem clearly' },
-      { id: '2.03', name: 'New Product Planner', action: 'Plan the product with features and requirements' },
-      { id: '1.04', name: 'Engineering Handoff Brief', action: 'Package everything into a build-ready brief' },
-    ],
-  },
-  {
-    title: 'Create a New SOP',
-    description: 'Document a repeatable process so any team member can follow it consistently.',
-    steps: [
-      { id: '2.01', name: 'Problem Definer', action: 'Clarify what process needs documenting and why' },
-      { id: '2.02', name: 'SOP Creator', action: 'Build the step-by-step standard operating procedure' },
-      { id: '1.02', name: 'Quality Checker', action: 'Validate the SOP meets quality standards' },
-    ],
-  },
-  {
-    title: 'Build an Automation',
-    description: 'Reduce manual work by automating a workflow across your tools.',
-    steps: [
-      { id: '2.01', name: 'Problem Definer', action: 'Define the manual process to automate' },
-      { id: '2.06', name: 'Automation Planner', action: 'Plan trigger, actions, and error handling' },
-      { id: '1.04', name: 'Engineering Handoff Brief', action: 'Hand off to engineering for implementation' },
-    ],
-  },
-  {
-    title: 'Request a System Change',
-    description: 'Need something changed in Podio, Monday, or another platform? Follow this flow.',
-    steps: [
-      { id: '2.01', name: 'Problem Definer', action: 'Define what needs changing and the impact' },
-      { id: '2.04', name: 'System Change Request', action: 'Create a structured change request' },
-      { id: '1.04', name: 'Engineering Handoff Brief', action: 'Package for engineering review' },
-    ],
-  },
-  {
-    title: 'Create a Report or Dashboard',
-    description: 'Need visibility into your data? Plan and specify a report or dashboard.',
-    steps: [
-      { id: '2.05', name: 'Report & Dashboard Planner', action: 'Define metrics, data sources, and layout' },
-      { id: '1.04', name: 'Engineering Handoff Brief', action: 'Hand off specs to engineering for build' },
-    ],
-  },
-  {
-    title: 'Build or Improve a Skill',
-    description: 'Create a new AI skill or improve an existing one in the taxonomy.',
-    steps: [
-      { id: '1.01', name: 'Skill Builder', action: 'Build or restructure the skill' },
-      { id: '1.02', name: 'Quality Checker', action: 'Validate against quality standards' },
-      { id: '1.03', name: 'Memory Manager', action: 'Update persistent memory if needed' },
-    ],
-  },
-];
+// Fetch goals with ordered skills from Supabase
+const goalsWithSkills = await getAllGoalsWithSkills(supabase);
 
-// Map skill IDs to content slugs
-const skillIdToSlug: Record<string, string> = {
-  '1.01': '1-01-skill-builder',
-  '1.02': '1-02-quality-checker',
-  '1.03': '1-03-memory-manager',
-  '1.04': '1-04-engineering-handoff',
-  '1.05': '1-05-company-profile',
-  '1.09': '1-09-tools-and-platforms',
-  '2.01': '2-01-problem-definer',
-  '2.02': '2-02-sop-creator',
-  '2.03': '2-03-new-product-planner',
-  '2.04': '2-04-system-change-request',
-  '2.05': '2-05-report-dashboard-planner',
-  '2.06': '2-06-automation-planner',
-  '2.07': '2-07-template-creator',
-};
+// Fetch skill metadata from the content collection
+const allContentSkills = await getCollection('skills');
+
+// Build skills list — include ALL skills for display metadata (names, oneLiner),
+// even "not-built" ones, since goals may reference them
+const skillsList = allContentSkills
+  .sort((a, b) => (a.data.skillId || '').localeCompare(b.data.skillId || '', undefined, { numeric: true }))
+  .map(s => ({
+    skillId: s.data.skillId || s.id,
+    contentSlug: s.id,
+    name: s.data.name,
+    series: s.data.series || 'Foundation',
+    oneLiner: s.data.oneLiner || '',
+  }));
 ---
 
 <Layout title="Common Workflows">
@@ -82,54 +33,42 @@ const skillIdToSlug: Record<string, string> = {
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 class="text-3xl font-black text-[var(--color-charcoal)] mb-3">Common Workflows</h1>
       <p class="text-lg text-[var(--color-gray-warm)] max-w-2xl">
-        These are the most common skill chains used at TLH. Each workflow shows you exactly which skills to use and in what order.
+        These are the goals your team works toward, and the skill chains to get there. Each workflow shows you exactly which skills to use and in what order.
       </p>
     </div>
   </section>
 
   <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="space-y-6">
-      {workflows.map((wf, idx) => (
-        <div class="bg-white rounded-xl border border-[var(--color-cream-dark)] overflow-hidden">
-          <div class="p-6">
-            <div class="flex items-start gap-4">
-              <span class="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-teal)] text-white flex items-center justify-center font-bold text-lg">
-                {idx + 1}
-              </span>
-              <div class="flex-1">
-                <h2 class="text-xl font-bold text-[var(--color-charcoal)] mb-1">{wf.title}</h2>
-                <p class="text-sm text-[var(--color-gray-warm)] mb-5">{wf.description}</p>
-
-                <!-- Steps -->
-                <div class="space-y-3">
-                  {wf.steps.map((step, si) => (
-                    <div class="flex items-start gap-3">
-                      <div class="flex flex-col items-center">
-                        <span class="w-7 h-7 rounded-full bg-[var(--color-teal-light)] text-[var(--color-teal-dark)] flex items-center justify-center text-xs font-bold flex-shrink-0">
-                          {si + 1}
-                        </span>
-                        {si < wf.steps.length - 1 && (
-                          <div class="w-0.5 h-6 bg-[var(--color-cream-dark)] mt-1"></div>
-                        )}
-                      </div>
-                      <a
-                        href={`${base}skills/${skillIdToSlug[step.id] || step.id}/`}
-                        class="flex-1 bg-[var(--color-cream)] rounded-lg px-4 py-3 hover:bg-[var(--color-teal-light)] transition-colors no-underline group"
-                      >
-                        <div class="flex items-center gap-2">
-                          <span class="text-xs font-mono text-[var(--color-teal-dark)]">{step.id}</span>
-                          <span class="text-sm font-bold text-[var(--color-charcoal)] group-hover:text-[var(--color-teal-dark)]">{step.name}</span>
-                        </div>
-                        <p class="text-xs text-[var(--color-gray-warm)] mt-0.5">{step.action}</p>
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
+    <div id="workflows-mount"
+      data-goals={JSON.stringify(goalsWithSkills)}
+      data-all-skills={JSON.stringify(skillsList)}
+      data-current-user={JSON.stringify(profile)}
+      data-base-url={base}
+    >
+      <!-- Loading skeleton shown before Preact hydrates -->
+      <div class="space-y-6 animate-pulse">
+        {goalsWithSkills.filter(g => g.skills.length > 0).map(() => (
+          <div class="bg-white rounded-xl border border-[var(--color-cream-dark)] h-32"></div>
+        ))}
+      </div>
     </div>
   </section>
+
+  <script>
+    const mount = document.getElementById('workflows-mount');
+    if (mount) {
+      const props = {
+        initialGoals: JSON.parse(mount.dataset.goals || '[]'),
+        allSkills: JSON.parse(mount.dataset.allSkills || '[]'),
+        currentUser: JSON.parse(mount.dataset.currentUser || 'null'),
+        baseUrl: mount.dataset.baseUrl || '/',
+      };
+
+      import('../components/workflows/WorkflowsManager.tsx').then(({ default: WorkflowsManager }) => {
+        import('preact').then(({ render, h }) => {
+          render(h(WorkflowsManager, props), mount);
+        });
+      });
+    }
+  </script>
 </Layout>

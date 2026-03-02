@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from './lib/supabase';
 const PROTECTED_ROUTES = ['/board', '/dashboard', '/admin'];
 
 // Routes that require SSR auth checks (all others are static and skip auth)
-const SSR_ROUTES = ['/board', '/dashboard', '/admin', '/login', '/auth', '/api'];
+const SSR_ROUTES = ['/board', '/dashboard', '/admin', '/login', '/auth', '/api', '/workflows', '/finder'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
