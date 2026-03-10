@@ -27,7 +27,7 @@ The Engineering Guardrail skill (loaded by Builders into every Claude Code proje
 | Database | Supabase (default) → MongoDB Atlas (when scaled) |
 | Deployment | Cloudflare Pages + Workers only |
 | Version Control | GitHub (TrueLegacyHomes org, private repos) |
-| Secrets | SOPS + age (encrypted GitHub org repo) |
+| Secrets | SOPS + age — `github.com/TrueLegacyHomes/tlh-secrets` (private) |
 
 ## Deployment Flow
 
