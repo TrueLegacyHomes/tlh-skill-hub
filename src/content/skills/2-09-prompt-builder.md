@@ -4,10 +4,10 @@ skillId: "2.09"
 series: "Blueprints"
 status: "active"
 audience: "All Team Members"
-oneLiner: "Walks you through building a clear, effective prompt for Claude before starting any project or task — auto-detects your project type and applies Anthropic's best practices."
-version: "2.0"
-last_updated: "2026-03-13"
-recommendedFor: ["improve", "define", "build"]
+oneLiner: "Transforms a vague project idea into a structured, optimized prompt through a guided interview — with dynamic skill recommendations from the compiled catalog."
+version: "2.1"
+last_updated: "2026-03-14"
+recommendedFor: ["start", "improve", "define", "build"]
 githubPath: "2.xx-blueprints/2.09-prompt-builder/SKILL.md"
 ---
 
@@ -17,11 +17,13 @@ Every project in Claude starts with a prompt. A good prompt gets you 80% of the 
 
 The Prompt Builder is a guided interview that asks you the right questions, detects what kind of project you're working on, and hands you a prompt that follows Anthropic's recommended best practices for Claude. It works for everyone — whether you're a Builder kicking off a new app in Claude Code or writing a follow-up email after an estate sale.
 
+**v2.1** adds dynamic skill recommendations — the skill reads a compiled catalog of all active TLH skills and recommends the right combination for each specific project, replacing the old approach where users had to already know which skills to load.
+
 ## How It Works
 
 **4-Phase Interview:**
 1. **Orient** — What are you trying to accomplish? (1-2 questions)
-2. **Scope** — What's in, what's out, what format? (mode-specific questions added here)
+2. **Scope** — Dynamic skill recommendations + what's in, what's out, what format? (mode-specific questions added here)
 3. **Detail** — The skill assembles your prompt using Anthropic's best practices (XML tags, role assignment, context ordering, examples, guardrails)
 4. **Confirm** — Review the prompt and adjust before using it
 

@@ -5,8 +5,8 @@ series: "Foundation"
 status: "active"
 audience: "All Team Members"
 oneLiner: "Validates any skill, process, list, document, taxonomy, or deliverable for completeness, consistency, accuracy, and MECE compliance."
-version: "1.0"
-last_updated: "2025-02-27"
+version: "1.1"
+last_updated: "2026-03-14"
 recommendedFor: ["improve"]
 githubPath: "1.xx-foundation/1.02-quality-checker/SKILL.md"
 ---

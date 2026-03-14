@@ -5,8 +5,8 @@ series: "Foundation"
 status: "active"
 audience: "All Team Members"
 oneLiner: "Creates, improves, and tests all skills in the TLH Skill Taxonomy (1.xx-4.xx)."
-version: "1.0"
-last_updated: "2025-02-27"
+version: "1.3"
+last_updated: "2026-03-14"
 recommendedFor: ["improve"]
 githubPath: "1.xx-foundation/1.01-skill-builder/SKILL.md"
 ---
